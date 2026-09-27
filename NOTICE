@@ -1,0 +1,162 @@
+Tiny MC Server — 第三方组件与版权声明
+Tiny MC Server — Third-Party Components and Copyright Notices
+=============================================================
+
+本文件中英对照。 / This file is bilingual (Chinese / English).
+
+
+一、本项目自身代码
+1. This Project's Own Code
+--------------------------
+  范围 / Scope:
+    本仓库内全部 Kotlin / Java / Gradle / 脚本 / 原生 C 源码（UI、ServerManager、
+    Runtime、诊断与自检工具、tools/jrelibs 下的自研原生库等）。
+    All Kotlin / Java / Gradle / script / native C sources in this repository
+    (UI, ServerManager, Runtime, diagnostics & self-test tools, and the
+    self-implemented native libraries under tools/jrelibs).
+
+  声明 / Statement:
+    上述代码全部为本项目自行编写，**不包含任何第三方 Minecraft 启动器**
+    （如 FoldCraftLauncher、PojavLauncher、Boardwalk 等）的源代码或文件。
+    本项目在调研过程中阅读过公开资料以理解 Android 上运行 JVM 的通用机制
+    （如 dlopen("libjli.so") + JLI_Launch、setenv 设置 HOME/TMPDIR），
+    这些属于 OpenJDK 公开接口与通用技术事实，相关实现均自行编写。
+    All of the above is written by this project, and contains **no source code
+    or files from any third-party Minecraft launcher** (e.g. FoldCraftLauncher,
+    PojavLauncher, Boardwalk). Public documentation of generic mechanisms for
+    running a JVM on Android (such as dlopen("libjli.so") + JLI_Launch, and
+    setenv for HOME/TMPDIR) was consulted while researching; these are public
+    OpenJDK interfaces and general technical facts, and all implementations
+    are original.
+
+
+二、内置 Java 运行时（app/src/main/assets/jre/**）
+2. Bundled Java Runtime (app/src/main/assets/jre/**)
+---------------------------------------------------
+  版权 / Copyright:
+    Copyright (c) Oracle and/or its affiliates. All rights reserved.
+
+  来源 / Origin:
+    JRE 17 / 21 / 25 —— Termux 官方软件仓库（https://packages.termux.dev）的
+      openjdk-17 / openjdk-21 / openjdk-25（aarch64）二进制包。
+      上游版本：openjdk-17 = 17.0.20，openjdk-21 = 21.0.12，openjdk-25 = 25.0.4。
+    JRE 17 / 21 / 25 — the openjdk-17 / openjdk-21 / openjdk-25 (aarch64) binary
+      packages from the official Termux repository (https://packages.termux.dev).
+      Upstream versions: openjdk-17 = 17.0.20, openjdk-21 = 21.0.12,
+      openjdk-25 = 25.0.4.
+
+  本项目所做的修改 / Modifications made by this project:
+    (a) 裁剪：删除与运行无关的内容 —— jmods/、demo/、man/、include/、ct.sym，
+        以及 bin/ 下除 java 外的工具；
+        Trimming: removed non-runtime content — jmods/, demo/, man/, include/,
+        ct.sym, and all bin/ tools except java;
+    (b) 删除服务端用不到的原生库：图像/声音类（libjpeg、liblcms2、libasound、
+        libandroid-sysv-semaphore、libjavajpeg、liblcms、libjsound）与
+        调试/Agent 类（libinstrument、libjdwp、libiconv）；
+        Removed native libraries a server never uses: graphics/audio
+        (libjpeg, liblcms2, libasound, libandroid-sysv-semaphore, libjavajpeg,
+        liblcms, libjsound) and debug/agent (libinstrument, libjdwp, libiconv);
+    (c) 自研替换：把原本由 Termux 提供的 libandroid-shmem 与 libandroid-spawn
+        替换为本项目自行实现的版本（见第三节），并因此移除了 libc++_shared。
+        Self-implemented replacement: the libandroid-shmem and libandroid-spawn
+        libraries originally from Termux were replaced with versions implemented
+        by this project (see Section 3); libc++_shared was therefore removed.
+
+  未改动的二进制 / Unmodified binaries:
+    OpenJDK 自身的二进制内容未作修改（仅裁剪与附带依赖）。JRE 内随附的版权与
+    版权文件原件保持原样，位于每个归档内的 legal/ 目录
+    （assets/jre/jre{17,21,25}/universal.tar.xz）。
+    The OpenJDK binaries themselves are unmodified (only trimmed; dependencies
+    are shipped alongside). The copyright files that ship with the
+    JRE are kept intact, and can be found in the legal/ directory inside each
+    archive (assets/jre/jre{17,21,25}/universal.tar.xz).
+
+  OpenJDK 源码获取 / OpenJDK source:
+    https://github.com/openjdk/                    (jdk17u / jdk21u / jdk25u)
+    https://github.com/termux/termux-packages      (Termux build recipes)
+
+
+三、本项目自研的原生库（tools/jrelibs/）
+3. Native Libraries Implemented by This Project (tools/jrelibs/)
+----------------------------------------------------------------
+  libandroid-shmem.so —— 实现 JVM 使用的 SysV 共享内存
+    (libandroid_shmget / shmat / shmdt / shmctl)，基于 memfd_create + mmap。
+  libandroid-spawn.so —— 实现 JVM 使用的 posix_spawn；优先转发到 bionic，
+    Android 8.x 时回退到自带的 clone + execve。
+
+  libandroid-shmem.so — implements the SysV shared memory used by the JVM
+    (libandroid_shmget / shmat / shmdt / shmctl) on top of memfd_create + mmap.
+  libandroid-spawn.so — implements posix_spawn for the JVM; forwards to bionic
+    when available, falling back to a built-in clone + execve on Android 8.x.
+
+  以上两个库为本项目原创，不含 Termux 或其它第三方代码。
+  Both libraries are original to this project, containing no Termux or other
+  third-party code.
+
+
+四、随 JRE 分发的第三方原生库
+4. Third-Party Native Libraries Shipped with the JRE
+----------------------------------------------------
+  libz.so.1
+    来源 / Origin: zlib（https://zlib.net），由 Termux 构建。
+    Origin: zlib (https://zlib.net), built by Termux.
+
+  > 说明：JRE 内其余 .so 均属 OpenJDK 自身（见第二节）。
+  > Note: all other .so files inside the JRE belong to OpenJDK (see Section 2).
+
+
+五、编译期依赖并打进 APK 的第三方库（Gradle / Maven）
+5. Third-Party Libraries Compiled into the APK (Gradle / Maven)
+---------------------------------------------------------------
+  以下库均以 Maven 依赖方式引入并打包进 APK（版权归各自作者所有）。
+  The following are pulled in as Maven dependencies and packaged into the APK
+  (copyright belongs to their respective authors).
+
+    AndroidX: androidx.core:core-ktx
+    AndroidX: androidx.lifecycle:lifecycle-runtime-ktx,
+              androidx.lifecycle:lifecycle-viewmodel-compose
+    AndroidX: androidx.activity:activity-compose
+    AndroidX: androidx.navigation:navigation-compose
+    Jetpack Compose: androidx.compose.ui:ui, ui-graphics, ui-tooling-preview,
+                     ui-tooling (debug)
+    Jetpack Compose: androidx.compose.material3:material3
+    Jetpack Compose: androidx.compose.material:material-icons-extended
+    Kotlin: org.jetbrains.kotlinx:kotlinx-serialization-json,
+            org.jetbrains.kotlinx:kotlinx-coroutines-android
+    OkHttp: com.squareup.okhttp3:okhttp
+    Apache Commons: org.apache.commons:commons-compress
+    XZ for Java: org.tukaani:xz
+
+  工具链（不打包进 APK）/ Toolchain (not packaged into the APK):
+    Android Gradle Plugin, Kotlin, Gradle, Android SDK —— 版权归各自作者所有。
+    Android Gradle Plugin, Kotlin, Gradle, Android SDK — copyright belongs to
+    their respective authors.
+
+
+六、Minecraft / Mojang
+6. Minecraft / Mojang
+---------------------
+  本项目 **不内置任何 Mojang / Minecraft 二进制或游戏资源**，仅提供下载与启动
+  功能；所有服务端 jar 均在用户操作时从官方或授权源获取，其使用须遵守
+  Minecraft 最终用户协议（EULA）。
+  This project **does not bundle any Mojang / Minecraft binaries or game
+  assets**; it only downloads and launches. All server jars are fetched from
+  official or authorized sources at the user's request and are subject to the
+  Minecraft EULA.
+
+  Minecraft 为 Mojang Studios / Microsoft 的商标；本项目与其无隶属关系。
+  Minecraft is a trademark of Mojang Studios / Microsoft; this project is not
+  affiliated with them.
+
+
+七、运行时访问的第三方服务
+7. Third-Party Services Contacted at Runtime
+-------------------------------------------
+  - Vanilla 服务端清单 / server manifest: https://launchermeta.mojang.com
+  - Paper / Folia: https://fill.papermc.io
+  - Purpur: https://api.purpurmc.org
+  - 插件搜索 / plugin search (Modrinth): https://api.modrinth.com
+
+  这些请求仅在用户主动操作时发起，受各自服务条款约束。
+  These requests are made only at the user's initiative and are governed by
+  each service's terms.

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tiny MC Server</string>
+    <string name="notif_channel_name">服务器运行状态</string>
+    <string name="notif_channel_desc">显示正在运行的 Minecraft 服务端状态</string>
+</resources>

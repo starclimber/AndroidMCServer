@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path name="instances" path="instances/" />
+    <files-path name="logs" path="logs/" />
+    <cache-path name="cache" path="." />
+    <external-files-path name="ext" path="." />
+</paths>
