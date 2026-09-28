@@ -1,138 +1,94 @@
 # Tiny MC Server
 
+A Minecraft Java Edition **server launcher** that runs on an Android phone.
+
+It bundles a trimmed OpenJDK runtime so the device can create and run Vanilla, Paper, Purpur and Folia servers directly — no root, no Termux, and no client-side rendering.
+
 **English** | [简体中文](README.md)
 
-A pure on-device launcher for the Minecraft **Java Edition server**. No client-side rendering, no Termux integration, no root required.
-
-- Package name: `dev.tinymcserver.app`
-- Target ABI: `arm64-v8a` (the bundled JRE is aarch64)
-- Requirement: **Android 8.0 (API 26) or newer** (`minSdk 26` / `targetSdk 28`, rationale below)
-- Current version: `1.0.0`
-
-> **Why is `targetSdk` 28?**
-> Since Android 10 (API 29), apps with `targetSdk >= 29` are forbidden from calling `exec()` on files inside their
-> **private data directory** (the W^X restriction; see the Android 10 behavior change *execute-permission*).
-> The bundled JRE must execute `java` from the private directory, so we follow Termux's compatibility approach and
-> keep `targetSdk = 28` (while `compileSdk` stays at 34).
-> If publishing to Google Play becomes necessary (which requires `targetSdk >= 34`), the workaround is to ship the
-> JRE executables inside `jniLibs` and run them from `nativeLibraryDir`.
+---
 
 ## Features
 
-- One-tap instance creation: pick a flavor (Vanilla / Paper / Purpur / Folia) and an MC version; the app automatically matches and extracts the bundled JRE and downloads the matching server jar.
-- Console: live logs, command input, readiness check, crash diagnostics.
-- File editing: Chinese labels for `server.properties`, read-only browsing and text editing, binary detection.
-- Plugin manager: search and one-tap install from Modrinth (with integrity checks, progress and cancel).
-- Backup / restore, player management (whitelist / OP / ban).
-- Keep-alive: foreground service + WakeLock + WifiLock + battery-optimization whitelist guidance.
-- Built-in **Skin Forge**: deterministically generate a 64×64 Minecraft Java skin from a "seed + style", exportable as PNG.
+- **One-tap instance creation**: pick a server flavor and game version; the app matches the runtime and downloads the corresponding server jar automatically.
+- **Console**: live logs, command input, readiness checks, crash diagnostics.
+- **File management**: browse the server directory, edit `server.properties` (with localized labels) and text files, with binary-file detection.
+- **Plugin manager**: search and install plugins from Modrinth, with download integrity checks, progress and cancel.
+- **Backups & player management**: back up / restore instances, manage whitelist / OP / ban lists.
+- **Skin Forge**: deterministically generate a 64×64 Minecraft Java skin from a "seed + style", exportable as PNG.
+- **Background reliability**: foreground service + WakeLock + WifiLock + battery-optimization whitelist guidance.
+
+## Requirements
+
+| Item | Requirement |
+|---|---|
+| OS version | Android 8.0 (API 26) or newer |
+| CPU ABI | `arm64-v8a` |
+| Storage | Depends on the server and runtime; typically 200 MB or more |
+
+## Installation
+
+1. Download the latest `TinyMCserver-<version>-arm64.apk` from the project's Releases page.
+2. Allow installation from unknown sources on the device, then install the APK.
 
 ## Getting started
 
-1. Open the app → tap **+** at the bottom right.
-2. Enter a name, choose a flavor (Vanilla / Paper / Purpur / Folia), choose an MC version (the JRE is matched automatically), set memory → accept the EULA.
-3. Tap **"Create & download server"**: the app **automatically** extracts the matched JRE and downloads the server jar from the official source (with a progress dialog), then opens the console.
-4. Tap **Start** in the console. If a download is interrupted, the "Readiness check" card at the top of the console lets you retry the JRE / server individually, or run "Prepare all".
+1. Open the app and tap **+** at the bottom right to create an instance.
+2. Enter a name, choose a server flavor (Vanilla / Paper / Purpur / Folia) and a game version, set memory, and accept the EULA.
+3. Tap **Create & download server**: the app extracts the runtime and downloads the server jar automatically (with progress), then opens the console.
+4. Tap **Start** in the console to run the server. If a download is interrupted, the "Readiness check" panel lets you retry the runtime or the server individually.
 
-## Where files live (all inside the app's private directory)
+## Supported servers
 
-```
-/data/data/dev.tinymcserver.app/
-  files/jre/jre{major}/       ← extracted JRE home (bin/java, lib/modules, libjvm.so, …)
-  files/instances/<id>/        ← server.jar, eula.txt, server.properties, plugins/, world/, backups/
-```
+| Flavor | Source |
+|---|---|
+| Vanilla | Mojang `launchermeta` manifest |
+| Paper / Folia | `fill.papermc.io` v3 |
+| Purpur | `api.purpurmc.org` v2 |
 
-No storage permission is required; nothing is written to shared storage.
+A mirror or proxy prefix can be configured under "Settings → Download sources & mirrors".
 
-> Why the JRE is "extracted": Android **cannot execute binaries inside an APK**, so `java` must be a real
-> executable file on disk. The JRE in the APK assets is therefore extracted to the private directory before running.
+## Bundled runtime (JRE)
+
+Three versions of the OpenJDK runtime (aarch64) are bundled and matched to game versions. They come from the official Termux repository and are distributed with the APK as mere aggregation; see [`NOTICE`](NOTICE) for copyright and origin.
+
+| Game version | Runtime |
+|---|---|
+| 26.x and later | JRE 25 |
+| 1.20.5 – 1.21.x | JRE 21 |
+| 1.17 – 1.20.4 | JRE 17 |
+
+Each runtime is stored as a single archive at `assets/jre/jre{17,21,25}/universal.tar.xz` and extracted into the app's private directory on first use (first into a staging directory, then atomically swapped in).
+
+To reduce size and keep dependencies clean, the upstream runtime is trimmed and two of its native libraries are replaced with self-implemented versions:
+
+- **`libandroid-shmem`** — provides SysV shared memory to the JVM (implemented on `memfd_create` + `mmap`).
+- **`libandroid-spawn`** — provides `posix_spawn` to the JVM (uses the system implementation where available, falling back to a built-in one on older systems).
+
+The sources of both libraries are in [`tools/jrelibs/`](tools/jrelibs/) (Apache-2.0) and are cross-compiled with Zig.
 
 ## Architecture
 
-1. **Android UI layer** (Jetpack Compose): instance list, creation wizard, console, file editor, settings, player management, backup, plugins, Skin Forge.
-2. **Server Manager layer**: instance model, version resolution, JRE matching, launch-argument assembly, lifecycle, log parsing, auto-restart.
-3. **Runtime layer**: the bundled JRE, launching `java -jar xxx.jar nogui` via `ProcessBuilder`, fully headless.
-4. **Native/OS layer**: foreground service, WakeLock/WifiLock, SAF export, network listeners, JRE `.so` dependencies.
+1. **UI layer** (Jetpack Compose): instance list, creation wizard, console, file editor, settings, player management, backup, plugins, Skin Forge.
+2. **Server Manager layer**: instance model, version resolution, runtime matching, launch-argument assembly, lifecycle, log parsing, auto-restart.
+3. **Runtime layer**: the bundled JRE, launching `java -jar <server.jar> nogui` via `ProcessBuilder` (headless).
+4. **Native / OS layer**: foreground service, WakeLock / WifiLock, SAF export, network listeners, JRE native libraries.
 
-## Bundled JRE
+## Data & storage
 
-Three versions of **Android bionic OpenJDK** (aarch64) are bundled and matched to MC versions.
-They are licensed under **GPLv2 + Classpath Exception**; see [`NOTICE`](NOTICE) for copyright and origin.
-The full license originals ship with the binaries inside the `legal/` directory of each archive.
-
-**Origin**: the `openjdk-17 / 21 / 25` (aarch64) binary packages from the **official Termux repository** (`packages.termux.dev`).
-This project applies **heavy trimming and a self-implemented replacement** to reduce size, drop unused modules,
-and keep dependencies clean:
-
-**① Trimming** — removed non-runtime content: `jmods/`, `demo/`, `man/`, `include/`, `ct.sym`, and all `bin/` tools except `java`;
-plus the native libraries a server never uses:
-
-- Graphics / audio: `libjpeg`, `liblcms2`, `libasound`, `libandroid-sysv-semaphore`, `libjavajpeg`, `liblcms`, `libjsound`
-- Debug / agent: `libinstrument` (`-javaagent`), `libjdwp` (remote debugging), `libiconv`
-
-**② Self-implemented replacements** — the following two libraries were originally provided by Termux; here they are
-**implemented from scratch** by this project (source in [`tools/jrelibs/`](tools/jrelibs/)):
-
-| Library | Purpose | Implementation |
-|---|---|---|
-| `libandroid-shmem` | JVM's SysV shared memory (`libandroid_shmget / shmat / shmdt / shmctl`) | `memfd_create` + `mmap`, raw syscalls only |
-| `libandroid-spawn` | JVM's child-process spawning (`posix_spawn`) | Forwards to bionic; on Android 8.x (where bionic lacks `posix_spawn`) falls back to a built-in `clone + execve` |
-
-Both are cross-compiled with [Zig](https://ziglang.org/) (`zig cc -target aarch64-linux-android`); see the header comments in the sources for the exact command.
-
-**③ As a result, the only non-OpenJDK native libraries left in the JRE are:**
-
-- `libz.so.1` — standard zlib (zlib license)
-- `libandroid-shmem.so` / `libandroid-spawn.so` — self-implemented by this project
-
-> **Why no JRE 8?** There is no clean, standalone JRE 8 distribution readily available for Android (the Termux
-> repository has no Java 8; PojavLauncher's public releases are iOS builds, and its Android builds live only in
-> login-gated CI artifacts). Only MC 1.16 and older need Java 8, while modern Paper / Purpur / Folia all require
-> 1.17+, so JRE 8 has not been bundled since 1.0.13.
-
-**Path inside the APK**: `assets/jre/jre{major}/universal.tar.xz` (a single archive is the complete JRE home).
-
-On first use of a version, `JreManager` streams it out with `commons-compress + XZ` into `files/jre/jre{major}/`,
-extracting first into a `cacheDir` staging directory and atomically swapping on success, so a half-extracted JRE is
-never mistaken for a complete one.
-
-Automatic matching by MC version (manually overridable in the wizard):
-
-| MC version | JRE | Extracted size |
-|---|---|---|
-| 26.x and later (new numbering) | 25 | ~160 MB |
-| 1.20.5 – 1.21.x | 21 | ~130 MB |
-| 1.17 – 1.20.4 | 17 | ~100 MB |
-| 1.16 and older | — | Unsupported (needs Java 8, no longer bundled) |
-
-> Only the version required by the current instance is extracted (chosen automatically at creation time).
-
-## Server support
-
-- **Vanilla** (Mojang `launchermeta` manifest)
-- **Paper / Folia** (`fill.papermc.io` v3)
-- **Purpur** (`api.purpurmc.org` v2)
-
-A mirror / proxy prefix can be configured under "Settings → Download sources & mirrors" (leave empty to use the official sources).
-
-## Launch command
+All data lives in the app's private directory; no storage permission is required:
 
 ```
-{JRE}/bin/java -server -Xms{m} -Xmx{m}
-  -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200
-  -Dfile.encoding=UTF-8 -Djava.io.tmpdir={instance/tmp}
-  -jar {server.jar} nogui
+/data/data/dev.tinymcserver.app/
+  files/jre/jre{major}/     # extracted runtime
+  files/instances/<id>/     # server.jar, eula.txt, server.properties, plugins/, world/, backups/
 ```
 
-Folia's usable core count is limited via `-XX:ActiveProcessorCount=N` (Folia derives its region thread count from it), avoiding saturation of all cores.
+## Background & keep-alive
 
-## Foreground service & keep-alive
-
-When a server is running, a foreground service is started with `foregroundServiceType="dataSync|specialUse"` and
-`stopWithTask=false`; **API 34+ uses `specialUse`** (to avoid Android 15/16's 6-hour limit on `dataSync`), older
-versions use `dataSync`. The notification shows flavor / version / JRE / port / player count / memory. A
-`PARTIAL_WAKE_LOCK` and a `WIFI_LOCK` are held; notification permission is requested after first install, and the
-settings page guides the user to add the app to the battery-optimization whitelist.
+While a server runs, a foreground service is started (`foregroundServiceType="dataSync|specialUse"`, `stopWithTask=false`).
+The notification shows the flavor, version, runtime, port, player count and memory usage; a `PARTIAL_WAKE_LOCK` and a `WIFI_LOCK` are held while running.
+Adding the app to the battery-optimization whitelist is recommended for more stable background operation.
 
 ## Building
 
@@ -144,21 +100,19 @@ export ANDROID_HOME=/path/to/android-sdk
 ./gradlew assembleRelease
 ```
 
-Alibaba Cloud mirrors are already configured in `settings.gradle.kts` to speed up dependency resolution.
+**Signing**: create `local.properties` in the project root with the following keys:
 
-**Signing**: supply your keystore via `local.properties` or environment variables. The bundled
-`app/release.keystore` is for local demonstration only — **do not commit it or its password to a public repository**.
+```properties
+RELEASE_STORE_FILE=release.keystore
+RELEASE_STORE_PASSWORD=<password>
+RELEASE_KEY_ALIAS=<alias>
+RELEASE_KEY_PASSWORD=<password>
+```
 
-## Compliance & licensing
+Both `local.properties` and the keystore file are listed in `.gitignore` and are never committed.
 
-- This project is licensed under the **GNU AGPL v3** (see [`LICENSE`](LICENSE)).
-- **No Mojang / Minecraft binaries or game assets are bundled**; this is only a downloader and launcher. All server jars are fetched from official or authorized sources at the user's request, and their use is subject to the Minecraft EULA.
-- The bundled OpenJDK follows **GPLv2 + Classpath Exception** and is distributed with the APK as mere aggregation.
-- This project contains **no source code or files from any third-party Minecraft launcher** (e.g. FoldCraftLauncher, PojavLauncher, Boardwalk).
-- A list of third-party components is in [`NOTICE`](NOTICE).
+## License
 
-## Changelog
+This project is licensed under the **GNU Affero General Public License v3.0**; see [`LICENSE`](LICENSE).
 
-### 1.0.0
-- **Added "Skin Forge"**: reachable from the top-right of the home screen (left of the settings button). Deterministically generates a 64×64 Minecraft Java skin (dual-layer) from a "seed + style", with custom seeds, a random/reroll button, 8 styles (adventurer / hoodie / knight / mage / ranger / cyber / ninja / street) and "auto", live preview, and PNG export. The same seed + style always yields the same skin. The algorithm is constraint-based procedural generation (xorshift32 PRNG + hue/saturation/lightness guards + contrast checks), implemented purely in Kotlin.
-- **Trimmed the bundled JRE**: removed 10 native libraries a server never uses (graphics / audio / debug); replaced `libandroid-shmem` and `libandroid-spawn` with **self-implemented** versions and dropped `libc++_shared`. The only non-OpenJDK native libraries left in the JRE are `libz.so.1` plus the two self-implemented ones.
+Third-party component origins and copyrights are listed in [`NOTICE`](NOTICE).
