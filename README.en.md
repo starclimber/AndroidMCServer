@@ -48,6 +48,24 @@ It bundles a trimmed OpenJDK runtime so the device can create and run Vanilla, P
 
 A mirror or proxy prefix can be configured under "Settings → Download sources & mirrors".
 
+## Skin Forge
+
+A built-in skin generator that produces 64×64 dual-layer skins for Minecraft Java Edition.
+
+**Entry point**: top-right of the home screen (left of the settings button).
+
+**Usage**:
+
+1. Enter any **seed** (or tap "Reroll" to generate one at random);
+2. Choose a **style** (or "Auto");
+3. Preview the result live, and **export it as a PNG**.
+
+The same "seed + style" always produces the same skin, making them easy to share and reproduce.
+
+**Styles**: Adventurer / Hoodie / Knight / Mage / Ranger / Cyber / Ninja / Street, plus "Auto".
+
+**Implementation**: constraint-based procedural generation — an xorshift32 PRNG drives the randomness, with hue-harmony relationships, saturation / lightness guards and lightness-contrast checks constraining the palette. Written purely in Kotlin, with no third-party code.
+
 ## Bundled runtime (JRE)
 
 Three versions of the OpenJDK runtime (aarch64) are bundled and matched to game versions. They come from the official Termux repository and are distributed with the APK as mere aggregation; see [`NOTICE`](NOTICE) for copyright and origin.
