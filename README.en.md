@@ -46,6 +46,8 @@ It bundles a trimmed OpenJDK runtime so the device can create and run Vanilla, P
 | Paper / Folia | `fill.papermc.io` v3 |
 | Purpur | `api.purpurmc.org` v2 |
 
+This app **does not bundle any server software**; all server jars are downloaded on demand from the sources above when an instance is created.
+
 A mirror or proxy prefix can be configured under "Settings → Download sources & mirrors".
 
 ## Skin Forge

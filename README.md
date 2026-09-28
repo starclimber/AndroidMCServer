@@ -46,6 +46,8 @@
 | Paper / Folia | `fill.papermc.io` v3 |
 | Purpur | `api.purpurmc.org` v2 |
 
+本应用**不内置任何服务端程序**，所有服务端 jar 均在创建实例时按需从上述来源下载。
+
 可在「设置 → 下载源与镜像」中配置镜像或代理前缀。
 
 ## 皮肤工坊
