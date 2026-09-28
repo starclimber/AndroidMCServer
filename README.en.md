@@ -85,7 +85,7 @@ To reduce size and keep dependencies clean, the upstream runtime is trimmed and 
 - **`libandroid-shmem`** — provides SysV shared memory to the JVM (implemented on `memfd_create` + `mmap`).
 - **`libandroid-spawn`** — provides `posix_spawn` to the JVM (uses the system implementation where available, falling back to a built-in one on older systems).
 
-The sources of both libraries are in [`tools/jrelibs/`](tools/jrelibs/) (Apache-2.0) and are cross-compiled with Zig.
+The sources of both libraries are in [`tools/jrelibs/`](tools/jrelibs/) (GNU Affero General Public License v3.0) and are cross-compiled with Zig.
 
 ## Architecture
 
