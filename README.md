@@ -85,7 +85,7 @@
 - **`libandroid-shmem`** —— 为 JVM 提供 SysV 共享内存（`memfd_create` + `mmap` 实现）。
 - **`libandroid-spawn`** —— 为 JVM 提供 `posix_spawn`（优先使用系统实现，旧系统回退到自带实现）。
 
-两个库的源码位于 [`tools/jrelibs/`](tools/jrelibs/)（Apache-2.0），使用 Zig 交叉编译。
+两个库的源码位于 [`tools/jrelibs/`](tools/jrelibs/)（GNU Affero General Public License v3.0），使用 Zig 交叉编译。
 
 ## 架构
 
