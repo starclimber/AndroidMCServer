@@ -28,7 +28,7 @@ It bundles a trimmed OpenJDK runtime so the device can create and run Vanilla, P
 
 ## Installation
 
-1. Download the latest `TinyMCserver-<version>-arm64.apk` from the project's Releases page.
+1. Download the latest `TinyMCserver-<version>.apk` from the project's Releases page.
 2. Allow installation from unknown sources on the device, then install the APK.
 
 ## Getting started

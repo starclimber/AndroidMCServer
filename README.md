@@ -28,7 +28,7 @@
 
 ## 安装
 
-1. 从项目 Releases 页面下载最新的 `TinyMCserver-<版本>-arm64.apk`。
+1. 从项目 Releases 页面下载最新的 `TinyMCserver-<版本>.apk`。
 2. 在设备上允许安装来自未知来源的应用，然后安装 APK。
 
 ## 快速开始
