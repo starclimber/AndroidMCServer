@@ -6,6 +6,7 @@ import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
+import dev.tinymcserver.app.core.i18n.t
 
 /** 统一网络访问（含下载与进度回调） */
 object Http {
@@ -49,7 +50,7 @@ object Http {
                     val buf = ByteArray(128 * 1024)
                     var read = 0L
                     while (true) {
-                        if (isCancelled()) throw CancellationException("下载已取消")
+                        if (isCancelled()) throw CancellationException(t("下载已取消"))
                         val n = ins.read(buf)
                         if (n < 0) break
                         outs.write(buf, 0, n)
@@ -63,7 +64,7 @@ object Http {
         if (expect > 0 && dest.length() != expect) {
             val got = dest.length()
             runCatching { dest.delete() }
-            throw RuntimeException("下载不完整（$got / $expect 字节），已删除，请重试")
+            throw RuntimeException(t("下载不完整（%s / %s 字节），已删除，请重试", got, expect))
         }
     }
 

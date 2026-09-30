@@ -36,6 +36,7 @@ import dev.tinymcserver.app.ui.screens.PlayerManageScreen
 import dev.tinymcserver.app.ui.screens.PluginScreen
 import dev.tinymcserver.app.ui.screens.SettingsScreen
 import dev.tinymcserver.app.ui.screens.SkinForgeScreen
+import dev.tinymcserver.app.core.i18n.t
 
 @Composable
 fun AppNav() {
@@ -91,9 +92,9 @@ fun AppNav() {
             onDismissRequest = {},
             confirmButton = {},
             dismissButton = {
-                TextButton(onClick = { vm.cancelDownload() }) { Text("取消") }
+                TextButton(onClick = { vm.cancelDownload() }) { Text(t("取消")) }
             },
-            title = { Text("正在处理") },
+            title = { Text(t("正在处理")) },
             text = {
                 Column {
                     Text(label)

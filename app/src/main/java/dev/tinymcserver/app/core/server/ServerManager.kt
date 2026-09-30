@@ -24,6 +24,7 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.OutputStreamWriter
 import java.util.concurrent.ConcurrentHashMap
+import dev.tinymcserver.app.core.i18n.t
 
 /** 全局启停入口：按实例 id 管理运行期控制器 */
 object ServerManager {
@@ -92,7 +93,7 @@ class RuntimeController(
             scope.launch {
                 delay(60_000)
                 if (_state.value.state != InstanceState.STOPPED) {
-                    appendLocal("停止超时，强制结束进程")
+                    appendLocal(t("停止超时，强制结束进程"))
                     process?.destroy()
                 }
             }
@@ -109,14 +110,14 @@ class RuntimeController(
     }
 
     fun sendCommand(cmd: String) {
-        val w = writer ?: run { appendLocal("进程未运行"); return }
+        val w = writer ?: run { appendLocal(t("进程未运行")); return }
         scope.launch {
             runCatching {
                 w.write(cmd)
                 w.newLine()
                 w.flush()
                 appendLocal("> $cmd")
-            }.onFailure { appendLocal("命令发送失败: ${it.message}") }
+            }.onFailure { appendLocal(t("命令发送失败: %s", it.message)) }
         }
     }
 
@@ -127,25 +128,25 @@ class RuntimeController(
     private suspend fun doStart(restart: Boolean) = withContext(Dispatchers.IO) {
         try {
             if (!jar.exists()) {
-                appendLine("[Tiny] 未找到 server.jar，请先在实例中下载服务端")
+                appendLine(t("[Tiny] 未找到 server.jar，请先在实例中下载服务端"))
                 _state.value = _state.value.copy(state = InstanceState.CRASHED)
                 return@withContext
             }
             if (!EulaManager.isAccepted(dir)) {
-                appendLine("[Tiny] 尚未同意 Mojang EULA，无法启动")
+                appendLine(t("[Tiny] 尚未同意 Mojang EULA，无法启动"))
                 _state.value = _state.value.copy(state = InstanceState.CRASHED)
                 return@withContext
             }
             val major = instance.config.jreMajor
             val jreHome = Paths.jreHome(appCtx, major)
             if (!Paths.jreJava(appCtx, major).exists()) {
-                appendLine("[Tiny] 未安装 JRE $major，请到「设置 → JRE 管理」安装")
+                appendLine(t("[Tiny] 未安装 JRE %s，请到「设置 → JRE 管理」安装", major))
                 _state.value = _state.value.copy(state = InstanceState.CRASHED)
                 return@withContext
             }
             // 自愈：确保 bin/java 有可执行权限（否则 exec 报 error=13 Permission denied）
             if (!JreManager.ensureExecutable(appCtx, major)) {
-                appendLine("[Tiny] JRE $major 的 bin/java 不可执行，自动修复失败，请到设置里「重装」该 JRE")
+                appendLine(t("[Tiny] JRE %s 的 bin/java 不可执行，自动修复失败，请到设置里「重装」该 JRE", major))
                 _state.value = _state.value.copy(state = InstanceState.CRASHED)
                 return@withContext
             }
@@ -157,10 +158,10 @@ class RuntimeController(
                 state = InstanceState.STARTING,
                 startedAt = System.currentTimeMillis(),
             )
-            appendLine("[Tiny] 使用 JRE $major 启动：${instance.config.type.display} ${instance.config.mcVersion}")
+            appendLine(t("[Tiny] 使用 JRE %s 启动：%s %s", major, instance.config.type.display, instance.config.mcVersion))
 
             val args = LaunchArgs.build(jreHome, instance.config, dir, jar)
-            appendLine("[Tiny] 启动参数: " + args.drop(1).joinToString(" "))
+            appendLine(t("[Tiny] 启动参数: ") + args.drop(1).joinToString(" "))
             val pb = ProcessBuilder(args)
                 .directory(dir)
                 .redirectErrorStream(true)
@@ -186,7 +187,7 @@ class RuntimeController(
             process = proc
             writer = BufferedWriter(OutputStreamWriter(proc.outputStream, Charsets.UTF_8))
             val pid = ProcessUtil.findPid(jar.absolutePath)
-            appendLine("[Tiny] 进程已启动" + if (pid > 0) " (pid=$pid)" else "")
+            appendLine(t("[Tiny] 进程已启动") + if (pid > 0) " (pid=$pid)" else "")
             _state.value = _state.value.copy(state = InstanceState.RUNNING, pid = pid)
 
             startMemorySampler(jar.absolutePath)
@@ -199,14 +200,14 @@ class RuntimeController(
             val code = proc.waitFor()
             memJob?.cancel()
             appendLine(
-                "[Tiny] 进程退出，返回码 $code" +
+                t("[Tiny] 进程退出，返回码 %s", code) +
                     if (code != 0) "（${CrashDiagnostics.explain(code)}）" else ""
             )
             if (!userStop && code != 0) {
                 diagnose(dir, pid)
                 appendLocal(
-                    "排查建议：① 把「诊断 → 启动参数」的 GC 预设切到「兼容（SerialGC）」再试；" +
-                        "② 降低 Xmx（先试 2048）；③ 换一个 JRE 版本（如 25 / 17）试。"
+                    t("排查建议：① 把「诊断 → 启动参数」的 GC 预设切到「兼容（SerialGC）」再试；") +
+                        t("② 降低 Xmx（先试 2048）；③ 换一个 JRE 版本（如 25 / 17）试。")
                 )
             }
             _state.value = _state.value.copy(
@@ -217,7 +218,7 @@ class RuntimeController(
             )
             maybeAutoRestart(code)
         } catch (e: Exception) {
-            appendLine("[Tiny] 启动失败：${e.message}")
+            appendLine(t("[Tiny] 启动失败：%s", e.message))
             _state.value = _state.value.copy(state = InstanceState.CRASHED)
             maybeAutoRestart(-1)
         }
@@ -228,7 +229,7 @@ class RuntimeController(
      * App 只能拿到退出码，真正的死因在 hs_err_pid*.log 与 logcat 的 crash buffer 里。
      */
     private suspend fun diagnose(dir: File, pid: Long) {
-        appendLocal("进程异常退出，开始收集崩溃现场…")
+        appendLocal(t("进程异常退出，开始收集崩溃现场…"))
         _state.value = _state.value.copy(crashSummary = "")
         val sb = StringBuilder()
 
@@ -236,13 +237,13 @@ class RuntimeController(
             runCatching { CrashDiagnostics.readHsErr(dir) }.getOrNull()
         }
         if (hs != null) {
-            appendLocal("找到 JVM 崩溃报告 ${hs.first.name}：")
-            hs.second.lineSequence().forEach { appendLine("[崩溃] $it") }
-            sb.append("=== JVM 崩溃报告 ").append(hs.first.name).append(" ===\n")
+            appendLocal(t("找到 JVM 崩溃报告 %s：", hs.first.name))
+            hs.second.lineSequence().forEach { appendLine(t("[崩溃] %s", it)) }
+            sb.append(t("=== JVM 崩溃报告 ")).append(hs.first.name).append(" ===\n")
                 .append(hs.second).append('\n')
         } else {
-            appendLocal("没有生成 hs_err_pid*.log —— 崩溃发生在 JVM 之外的原生层（如 bionic 分配器 / 动态链接器）。")
-            sb.append("未生成 hs_err 报告（崩溃点在 JVM 之外的原生层）\n")
+            appendLocal(t("没有生成 hs_err_pid*.log —— 崩溃发生在 JVM 之外的原生层（如 bionic 分配器 / 动态链接器）。"))
+            sb.append(t("未生成 hs_err 报告（崩溃点在 JVM 之外的原生层）\n"))
         }
 
         val lg = withTimeoutOrNull(8_000) {
@@ -251,25 +252,25 @@ class RuntimeController(
             }
         } ?: emptyList()
         if (lg.isEmpty()) {
-            appendLocal("logcat 未取到内容（部分系统限制读取，可忽略）")
+            appendLocal(t("logcat 未取到内容（部分系统限制读取，可忽略）"))
         } else {
-            appendLocal("logcat 崩溃片段（${lg.size} 行）：")
+            appendLocal(t("logcat 崩溃片段（%s 行）：", lg.size))
             lg.forEach { appendLine("[logcat] $it") }
             sb.append("\n=== logcat ===\n").append(lg.joinToString("\n"))
         }
 
         _state.value = _state.value.copy(crashSummary = sb.toString())
-        appendLocal("诊断信息已生成，点底部「诊断」查看或复制。")
+        appendLocal(t("诊断信息已生成，点底部「诊断」查看或复制。"))
     }
 
     private fun maybeAutoRestart(exitCode: Int) {
         if (userStop || !instance.config.autoRestart) return
         if (restartCount >= 5) {
-            appendLine("[Tiny] 自动重启已达上限(5)，停止。")
+            appendLine(t("[Tiny] 自动重启已达上限(5)，停止。"))
             return
         }
         restartCount++
-        appendLocal("将在 10 秒后自动重启（第 $restartCount 次）")
+        appendLocal(t("将在 10 秒后自动重启（第 %s 次）", restartCount))
         scope.launch {
             delay(10_000)
             if (!userStop) start(restart = true)
@@ -282,8 +283,8 @@ class RuntimeController(
             _state.value = _state.value.copy(players = n, maxPlayers = max)
         }
         when {
-            LogParser.isOom(line) -> appendLocal("检测到内存溢出(OOM)，建议提高 Xmx 或降低视距")
-            LogParser.isReady(line) -> appendLocal("服务端已就绪")
+            LogParser.isOom(line) -> appendLocal(t("检测到内存溢出(OOM)，建议提高 Xmx 或降低视距"))
+            LogParser.isReady(line) -> appendLocal(t("服务端已就绪"))
         }
         if (_state.value.state == InstanceState.STARTING && LogParser.isReady(line)) {
             _state.value = _state.value.copy(state = InstanceState.RUNNING)

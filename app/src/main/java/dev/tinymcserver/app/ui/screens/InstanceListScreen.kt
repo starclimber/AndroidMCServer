@@ -42,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -52,6 +53,7 @@ import dev.tinymcserver.app.core.server.ServerManager
 import dev.tinymcserver.app.core.storage.Paths
 import dev.tinymcserver.app.ui.AppViewModel
 import java.io.File
+import dev.tinymcserver.app.core.i18n.t
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,29 +68,29 @@ fun InstanceListScreen(vm: AppViewModel, nav: NavController) {
                 title = { Text("Tiny MC Server") },
                 actions = {
                     IconButton(onClick = { nav.navigate("skinforge") }) {
-                        Icon(Icons.Filled.Face, contentDescription = "皮肤工坊")
+                        Icon(Icons.Filled.Face, contentDescription = t("皮肤工坊"))
                     }
                     IconButton(onClick = { nav.navigate("settings") }) {
-                        Icon(Icons.Filled.Settings, contentDescription = "设置")
+                        Icon(Icons.Filled.Settings, contentDescription = t("设置"))
                     }
                     IconButton(onClick = { nav.navigate("about") }) {
-                        Icon(Icons.Filled.Info, contentDescription = "关于")
+                        Icon(Icons.Filled.Info, contentDescription = t("关于"))
                     }
                 },
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { nav.navigate("wizard") }) {
-                Icon(Icons.Filled.Add, contentDescription = "新建实例")
+                Icon(Icons.Filled.Add, contentDescription = t("新建实例"))
             }
         },
     ) { pad ->
         if (instances.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(pad), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("还没有服务器实例", style = MaterialTheme.typography.titleMedium)
+                    Text(t("还没有服务器实例"), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(6.dp))
-                    Text("点右下角 + 创建你的第一个手机服务端", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(t("点右下角 + 创建你的第一个手机服务端"), color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                 }
             }
         } else {
@@ -114,16 +116,16 @@ fun InstanceListScreen(vm: AppViewModel, nav: NavController) {
     pendingDelete?.let { inst ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("删除实例") },
-            text = { Text("将删除「${inst.config.name}」及其世界、配置与备份，不可恢复。") },
+            title = { Text(t("删除实例")) },
+            text = { Text(t("将删除「%s」及其世界、配置与备份，不可恢复。", inst.config.name)) },
             confirmButton = {
                 TextButton(onClick = {
                     ServerManager.controllerOrNull(inst.id)?.forceKill()
                     vm.deleteInstance(inst.id)
                     pendingDelete = null
-                }) { Text("删除") }
+                }) { Text(t("删除")) }
             },
-            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("取消") } },
+            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text(t("取消")) } },
         )
     }
 }
@@ -140,11 +142,11 @@ private fun InstanceCard(
     val controller = remember(inst.id) { ServerManager.controller(ctx, inst) }
     val st by controller.state.collectAsState()
     val (label, color) = when (st.state) {
-        InstanceState.RUNNING -> "运行中" to Color(0xFF66BB6A)
-        InstanceState.STARTING -> "启动中" to Color(0xFFFFA726)
-        InstanceState.STOPPING -> "停止中" to Color(0xFFFFA726)
-        InstanceState.CRASHED -> "已崩溃" to Color(0xFFEF5350)
-        InstanceState.STOPPED -> "已停止" to MaterialTheme.colorScheme.onSurfaceVariant
+        InstanceState.RUNNING -> t("运行中") to Color(0xFF66BB6A)
+        InstanceState.STARTING -> t("启动中") to Color(0xFFFFA726)
+        InstanceState.STOPPING -> t("停止中") to Color(0xFFFFA726)
+        InstanceState.CRASHED -> t("已崩溃") to Color(0xFFEF5350)
+        InstanceState.STOPPED -> t("已停止") to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Card(
@@ -166,20 +168,20 @@ private fun InstanceCard(
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "端口 ${inst.config.port} · JRE ${inst.config.jreMajor} · " +
-                        "${st.players}/${st.maxPlayers} 人 · ${st.memoryUsedMb}/${st.memoryMaxMb}MB",
+                    t("端口 %s · JRE %s · ", inst.config.port, inst.config.jreMajor) +
+                        t("%s/%s 人 · %s/%sMB", st.players, st.maxPlayers, st.memoryUsedMb, st.memoryMaxMb),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f),
                 )
             }
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                IconButton(onClick = onOpen) { Icon(Icons.Filled.Terminal, "控制台") }
-                IconButton(onClick = onEdit) { Icon(Icons.Filled.Edit, "编辑") }
+                IconButton(onClick = onOpen) { Icon(Icons.Filled.Terminal, t("控制台")) }
+                IconButton(onClick = onEdit) { Icon(Icons.Filled.Edit, t("编辑")) }
                 IconButton(onClick = onMore) {
-                    Icon(Icons.Filled.Settings, "文件与更多")
+                    Icon(Icons.Filled.Settings, t("文件与更多"))
                 }
-                IconButton(onClick = onDelete) { Icon(Icons.Filled.Delete, "删除") }
+                IconButton(onClick = onDelete) { Icon(Icons.Filled.Delete, t("删除")) }
             }
         }
     }

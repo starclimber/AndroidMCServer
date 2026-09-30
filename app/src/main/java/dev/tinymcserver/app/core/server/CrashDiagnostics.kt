@@ -2,6 +2,7 @@ package dev.tinymcserver.app.core.server
 
 import java.io.File
 import java.util.concurrent.TimeUnit
+import dev.tinymcserver.app.core.i18n.t
 
 /**
  * 崩溃现场取证。
@@ -16,13 +17,13 @@ object CrashDiagnostics {
 
     /** 退出码 → 人话 */
     fun explain(code: Int): String = when (code) {
-        134 -> "SIGABRT：原生层主动中止（JVM/libc 崩溃，最常见）"
-        137 -> "SIGKILL：被系统杀掉，通常是内存不足（降低 Xmx 或关掉后台应用）"
-        139 -> "SIGSEGV：段错误（原生代码访问了非法内存）"
-        143 -> "SIGTERM：被要求退出"
-        1 -> "异常退出（参数错误或 Java 抛异常）"
-        126, 127 -> "无法执行 java（权限位或文件缺失）"
-        else -> "退出码 $code"
+        134 -> t("SIGABRT：原生层主动中止（JVM/libc 崩溃，最常见）")
+        137 -> t("SIGKILL：被系统杀掉，通常是内存不足（降低 Xmx 或关掉后台应用）")
+        139 -> t("SIGSEGV：段错误（原生代码访问了非法内存）")
+        143 -> t("SIGTERM：被要求退出")
+        1 -> t("异常退出（参数错误或 Java 抛异常）")
+        126, 127 -> t("无法执行 java（权限位或文件缺失）")
+        else -> t("退出码 %s", code)
     }
 
     /** 读取最新的一份 hs_err_pid*.log，返回 (文件, 摘要) */

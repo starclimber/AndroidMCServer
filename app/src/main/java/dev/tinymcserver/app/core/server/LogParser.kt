@@ -1,5 +1,7 @@
 package dev.tinymcserver.app.core.server
 
+import dev.tinymcserver.app.core.i18n.t
+
 /** 控制台输出按行解析 */
 object LogParser {
 
@@ -45,8 +47,8 @@ object LogParser {
         val errs = lines.filter { isError(it) }
         val tail = lines.takeLast(n)
         return buildString {
-            appendLine("=== 错误摘要 (共 ${errs.size} 条异常/错误行) ===")
-            if (errs.isEmpty()) appendLine("未检测到明显异常行。")
+            appendLine(t("=== 错误摘要 (共 %s 条异常/错误行) ===", errs.size))
+            if (errs.isEmpty()) appendLine(t("未检测到明显异常行。"))
             tail.forEach { appendLine(it) }
         }
     }

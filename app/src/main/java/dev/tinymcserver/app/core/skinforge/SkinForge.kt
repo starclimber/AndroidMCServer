@@ -15,6 +15,7 @@ package dev.tinymcserver.app.core.skinforge
 
 import java.util.Locale
 import java.util.zip.CRC32
+import dev.tinymcserver.app.core.i18n.t
 
 // ==================================================================
 // 1. 颜色工具（HSL 空间）—— Python: clamp/hsl2rgb/rgb2hsl/shade/setL/mix/hexc
@@ -232,46 +233,46 @@ private val STYLE_ORDER = listOf(
     "adventurer", "hoodie", "knight", "mage", "ranger", "cyber", "ninja", "street"
 )
 
-private val STYLE_MAP: Map<String, StyleSpec> = linkedMapOf(
+private val STYLE_MAP: Map<String, StyleSpec> get() = linkedMapOf(
     "adventurer" to StyleSpec(
         base = "top", jacket = null, jacketC = null, trim = "accent", sleeve = "long",
         lower = "pants", belt = true, pauldron = false,
-        patterns = listOf("plain", "emblem", "stripe"), head = emptyMap(), label = "旅人"
+        patterns = listOf("plain", "emblem", "stripe"), head = emptyMap(), label = t("旅人")
     ),
     "hoodie" to StyleSpec(
         base = "top", jacket = "hoodie", jacketC = "top", trim = "sub", sleeve = "long",
         lower = "pants", belt = false, pauldron = false,
-        patterns = listOf("plain", "plain", "stripe"), head = mapOf("hood" to true), label = "兜帽"
+        patterns = listOf("plain", "plain", "stripe"), head = mapOf("hood" to true), label = t("兜帽")
     ),
     "knight" to StyleSpec(
         base = "sub", jacket = "armor", jacketC = null, trim = "accent", sleeve = "long",
         lower = "pants", belt = true, pauldron = true,
-        patterns = listOf("plain"), head = mapOf("helmet" to true, "bald" to true), label = "铁卫"
+        patterns = listOf("plain"), head = mapOf("helmet" to true, "bald" to true), label = t("铁卫")
     ),
     "mage" to StyleSpec(
         base = "top", jacket = "robe", jacketC = "top", trim = "accent", sleeve = "long",
         lower = "robe", belt = false, pauldron = false,
-        patterns = listOf("plain", "panel"), head = mapOf("hat" to "pointy"), label = "秘术"
+        patterns = listOf("plain", "panel"), head = mapOf("hat" to "pointy"), label = t("秘术")
     ),
     "ranger" to StyleSpec(
         base = "top", jacket = "vest", jacketC = "sub", trim = "accent", sleeve = "short",
         lower = "pants", belt = true, pauldron = false,
-        patterns = listOf("plain", "panel"), head = mapOf("hood" to "?"), label = "游侠"
+        patterns = listOf("plain", "panel"), head = mapOf("hood" to "?"), label = t("游侠")
     ),
     "cyber" to StyleSpec(
         base = "pants", jacket = "tech", jacketC = "top", trim = "accent", sleeve = "long",
         lower = "pants", belt = true, pauldron = false,
-        patterns = listOf("plain"), head = mapOf("visor" to true, "headphones" to true), label = "义体"
+        patterns = listOf("plain"), head = mapOf("visor" to true, "headphones" to true), label = t("义体")
     ),
     "ninja" to StyleSpec(
         base = "pants", jacket = "vest", jacketC = "top", trim = "accent", sleeve = "long",
         lower = "pants", belt = true, pauldron = false,
-        patterns = listOf("plain"), head = mapOf("mask" to true, "band" to true), label = "影刃"
+        patterns = listOf("plain"), head = mapOf("mask" to true, "band" to true), label = t("影刃")
     ),
     "street" to StyleSpec(
         base = "top", jacket = null, jacketC = null, trim = "accent", sleeve = "short",
         lower = "shorts", belt = false, pauldron = false,
-        patterns = listOf("stripe", "emblem", "plain"), head = mapOf("hat" to "?"), label = "街头"
+        patterns = listOf("stripe", "emblem", "plain"), head = mapOf("hat" to "?"), label = t("街头")
     )
 )
 
@@ -285,26 +286,26 @@ private val HAIR_COVER = mapOf(
 )
 
 /** Python: HAIR_CN */
-private val HAIR_CN = mapOf(
-    "short" to "短发", "messy" to "乱发", "long" to "长发", "bob" to "姬发式",
-    "afro" to "蓬发", "bald" to "光头"
+private val HAIR_CN: Map<String, String> get() = mapOf(
+    "short" to t("短发"), "messy" to t("乱发"), "long" to t("长发"), "bob" to t("姬发式"),
+    "afro" to t("蓬发"), "bald" to t("光头")
 )
 
 /** Python: MOOD_CN */
-private val MOOD_CN = mapOf(
-    "vivid" to "鲜艳", "muted" to "沉稳", "dark" to "暗调", "pastel" to "柔粉", "neon" to "霓虹"
+private val MOOD_CN: Map<String, String> get() = mapOf(
+    "vivid" to t("鲜艳"), "muted" to t("沉稳"), "dark" to t("暗调"), "pastel" to t("柔粉"), "neon" to t("霓虹")
 )
 
 /** Python: SCHEME_CN */
-private val SCHEME_CN = mapOf(
-    "analogous" to "邻近色", "complement" to "互补色", "split" to "分裂互补",
-    "triad" to "三角配色", "mono" to "单色系"
+private val SCHEME_CN: Map<String, String> get() = mapOf(
+    "analogous" to t("邻近色"), "complement" to t("互补色"), "split" to t("分裂互补"),
+    "triad" to t("三角配色"), "mono" to t("单色系")
 )
 
 /** Python: 中文名（adventurer_ 系列）—— 对应 _make_name 里的 noun 表 */
-private val STYLE_NOUN = mapOf(
-    "adventurer" to "旅人", "hoodie" to "夜行者", "knight" to "铁卫", "mage" to "秘术师",
-    "ranger" to "游侠", "cyber" to "义体客", "ninja" to "影刃", "street" to "街角少年"
+private val STYLE_NOUN: Map<String, String> get() = mapOf(
+    "adventurer" to t("旅人"), "hoodie" to t("夜行者"), "knight" to t("铁卫"), "mage" to t("秘术师"),
+    "ranger" to t("游侠"), "cyber" to t("义体客"), "ninja" to t("影刃"), "street" to t("街角少年")
 )
 
 // ==================================================================
@@ -554,7 +555,7 @@ private class Forge(seed: String, style: String?) {
     /** Python: Forge._make_name() */
     private fun makeName(style: String): String {
         val h = ((h1 % 360.0) + 360.0) % 360.0
-        val adj = listOf("绯红", "赤铜", "琥珀", "沙金", "苔绿", "翠森", "霜青", "湛蓝", "靛夜", "紫曜", "霓虹", "樱绯")
+        val adj = listOf(t("绯红"), t("赤铜"), t("琥珀"), t("沙金"), t("苔绿"), t("翠森"), t("霜青"), t("湛蓝"), t("靛夜"), t("紫曜"), t("霓虹"), t("樱绯"))
         val a = adj[(h / 30.0).toInt() % 12]
         return a + (STYLE_NOUN[style] ?: "")
     }
@@ -994,15 +995,15 @@ private class Forge(seed: String, style: String?) {
         tags.add(SCHEME_CN[scheme] ?: scheme)
         tags.add(HAIR_CN[D.hair] ?: D.hair)
         for ((key, cn) in listOf(
-            "hood" to "兜帽", "helmet" to "头盔", "visor" to "目镜", "mask" to "面罩",
-            "headphones" to "耳机", "hat" to "帽子"
+            "hood" to t("兜帽"), "helmet" to t("头盔"), "visor" to t("目镜"), "mask" to t("面罩"),
+            "headphones" to t("耳机"), "hat" to t("帽子")
         )) {
             if (truthy(D.head[key])) tags.add(cn)
         }
-        if (D.socks) tags.add("长袜")
+        if (D.socks) tags.add(t("长袜"))
         val seen = HashSet<String>()
         val uniq = tags.filter { seen.add(it) }
-        return D.name + " · " + uniq.joinToString(" · ") + " · 肤色 " + hexc(role("skin").b)
+        return D.name + " · " + uniq.joinToString(" · ") + t(" · 肤色 ") + hexc(role("skin").b)
     }
 }
 
@@ -1013,8 +1014,8 @@ private class Forge(seed: String, style: String?) {
 object SkinForge {
 
     /** 风格 key（与 Python STYLES 的键完全一致）→ 中文标签 */
-    val STYLES: List<Pair<String, String>> =
-        STYLE_ORDER.map { it to (STYLE_MAP[it]!!.label) }
+    val STYLES: List<Pair<String, String>>
+        get() = STYLE_ORDER.map { it to (STYLE_MAP[it]!!.label) }
 
     /** Python: random_seed() —— '%06X' % random.getrandbits(24) */
     fun randomSeed(): String =

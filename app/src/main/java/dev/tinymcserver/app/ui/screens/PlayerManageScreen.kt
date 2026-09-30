@@ -37,20 +37,21 @@ import androidx.navigation.NavController
 import dev.tinymcserver.app.core.player.PlayerManager
 import dev.tinymcserver.app.core.server.ServerManager
 import dev.tinymcserver.app.ui.AppViewModel
+import dev.tinymcserver.app.core.i18n.t
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerManageScreen(vm: AppViewModel, nav: NavController, id: String) {
     val ctx = LocalContext.current
     val inst = vm.instances.collectAsState().value.firstOrNull { it.id == id }
-    if (inst == null) { Text("实例不存在", Modifier.padding(16.dp)); return }
+    if (inst == null) { Text(t("实例不存在"), Modifier.padding(16.dp)); return }
     val controller = remember(id) { ServerManager.controller(ctx, inst) }
 
     var tab by remember { mutableIntStateOf(0) }
     var name by remember { mutableStateOf("") }
     var tick by remember { mutableIntStateOf(0) }
 
-    val tabs = listOf("白名单", "OP", "封禁")
+    val tabs = listOf(t("白名单"), "OP", t("封禁"))
     val list = when (tab) {
         0 -> PlayerManager.whitelist(ctx, id)
         1 -> PlayerManager.ops(ctx, id)
@@ -60,10 +61,10 @@ fun PlayerManageScreen(vm: AppViewModel, nav: NavController, id: String) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("玩家管理") },
+                title = { Text(t("玩家管理")) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },
             )
@@ -71,7 +72,7 @@ fun PlayerManageScreen(vm: AppViewModel, nav: NavController, id: String) {
     ) { pad ->
         Column(Modifier.fillMaxSize().padding(pad)) {
             Text(
-                "名单变更通过控制台命令下发（需服务端运行）。",
+                t("名单变更通过控制台命令下发（需服务端运行）。"),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(12.dp),
@@ -89,7 +90,7 @@ fun PlayerManageScreen(vm: AppViewModel, nav: NavController, id: String) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("玩家名") },
+                    label = { Text(t("玩家名")) },
                     singleLine = true,
                     modifier = Modifier.weight(1f),
                 )
@@ -103,7 +104,7 @@ fun PlayerManageScreen(vm: AppViewModel, nav: NavController, id: String) {
                     }
                     controller.sendCommand(cmd)
                     name = ""; tick++
-                }) { Text("添加") }
+                }) { Text(t("添加")) }
             }
             TextButtonRefresh(tick) { tick++ }
 
@@ -122,7 +123,7 @@ fun PlayerManageScreen(vm: AppViewModel, nav: NavController, id: String) {
                             }
                             controller.sendCommand(cmd)
                             tick++
-                        }) { Icon(Icons.Filled.Delete, contentDescription = "移除") }
+                        }) { Icon(Icons.Filled.Delete, contentDescription = t("移除")) }
                     }
                 }
             }
@@ -135,5 +136,5 @@ private fun TextButtonRefresh(tick: Int, onRefresh: () -> Unit) {
     androidx.compose.material3.TextButton(
         onClick = onRefresh,
         modifier = Modifier.padding(horizontal = 12.dp),
-    ) { Text("刷新名单") }
+    ) { Text(t("刷新名单")) }
 }

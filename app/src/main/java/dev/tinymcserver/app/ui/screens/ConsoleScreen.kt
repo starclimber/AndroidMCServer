@@ -55,6 +55,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -79,6 +80,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import dev.tinymcserver.app.core.i18n.t
 
 /**
  * 控制台。布局铁律（用户要求）：
@@ -96,7 +98,7 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
     val ctx = LocalContext.current
     val inst = vm.instances.collectAsState().value.firstOrNull { it.id == id }
     if (inst == null) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("实例不存在") }
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(t("实例不存在"), textAlign = TextAlign.Center) }
         return
     }
     val controller = remember(id) { ServerManager.controller(ctx, inst) }
@@ -137,7 +139,7 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
                 title = { Text(inst.config.name) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },
                 actions = {
@@ -145,7 +147,7 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
                         if (running) {
                             controller.requestStop()
                         } else if (!ready) {
-                            vm.toast("请先完成准备：安装 JRE 与下载服务端")
+                            vm.toast(t("请先完成准备：安装 JRE 与下载服务端"))
                         } else {
                             ServerService.start(ctx)
                             controller.start()
@@ -155,7 +157,7 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
                             if (running) Icons.Filled.Stop else Icons.Filled.PlayArrow,
                             contentDescription = null,
                         )
-                        Text(if (running) "停止" else "启动")
+                        Text(if (running) t("停止") else t("启动"))
                     }
                 },
             )
@@ -166,13 +168,14 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
             // ---------- 顶部：状态 + 告警（固定） ----------
             Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
                 Text(
-                    "状态：${st.state.name}   端口 ${inst.config.port}   " +
-                        "玩家 ${st.players}/${st.maxPlayers}   内存 ${st.memoryUsedMb}/${st.memoryMaxMb}MB",
+                    t("状态：%s   端口 %s   ", st.state.name, inst.config.port) +
+                        t("玩家 %s/%s   内存 %s/%sMB", st.players, st.maxPlayers, st.memoryUsedMb, st.memoryMaxMb),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Text(
-                    "局域网连接：${ip ?: "未连接"} : ${inst.config.port}   ·   " +
-                        "${inst.config.type.display} ${inst.config.mcVersion}   ·   JRE ${inst.config.jreMajor}",
+                    t("局域网连接：%s : %s   ·   %s %s   ·   JRE %s",
+                        ip ?: "未连接", inst.config.port, inst.config.type.display,
+                        inst.config.mcVersion, inst.config.jreMajor),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -194,12 +197,12 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
                 ) {
                     Column(Modifier.padding(12.dp)) {
                         Text(
-                            "上次启动异常退出（返回码 ${st.exitCode}）",
+                            t("上次启动异常退出（返回码 %s）", st.exitCode),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                         )
                         Text(
-                            "点「诊断」看崩溃现场、点「自检」判断 JVM 能否在这台设备上起来。",
+                            t("点「诊断」看崩溃现场、点「自检」判断 JVM 能否在这台设备上起来。"),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             maxLines = 2,
@@ -211,25 +214,25 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
             if (!ready) {
                 Card(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
                     Column(Modifier.padding(12.dp)) {
-                        Text("开始前需要准备两样东西", style = MaterialTheme.typography.titleSmall)
+                        Text(t("开始前需要准备两样东西"), style = MaterialTheme.typography.titleSmall)
                         ReadyRow(
                             ok = jreReady,
-                            text = if (jreReady) "JRE ${inst.config.jreMajor} 已就绪"
-                            else "JRE ${inst.config.jreMajor} 未解压",
-                            action = "安装 JRE",
+                            text = if (jreReady) t("JRE %s 已就绪", inst.config.jreMajor)
+                            else t("JRE %s 未解压", inst.config.jreMajor),
+                            action = t("安装 JRE"),
                             onClick = { vm.installJre(inst.config.jreMajor) { tick++ } },
                         )
                         ReadyRow(
                             ok = jarReady,
-                            text = if (jarReady) "服务端 ${inst.jarFile} 已就绪"
-                            else "服务端未下载（${inst.config.type.display} ${inst.config.mcVersion}）",
-                            action = "下载服务端",
+                            text = if (jarReady) t("服务端 %s 已就绪", inst.jarFile)
+                            else t("服务端未下载（%s %s）", inst.config.type.display, inst.config.mcVersion),
+                            action = t("下载服务端"),
                             onClick = { vm.installJar(inst) { tick++ } },
                         )
                         Button(
                             onClick = { vm.prepareInstance(inst) { tick++ } },
                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        ) { Text("一键准备（JRE + 服务端）") }
+                        ) { Text(t("一键准备（JRE + 服务端）")) }
                     }
                 }
             }
@@ -274,7 +277,7 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
                         if (!atBottom) {
                             AssistChip(
                                 onClick = { scope.launch { listState.scrollToItem(log.size - 1) } },
-                                label = { Text("↓ 最新") },
+                                label = { Text(t("↓ 最新")) },
                             )
                         }
                         listOf("stop", "save-all", "reload confirm", "whitelist list",
@@ -288,12 +291,12 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
                             .padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        OutlinedButton(onClick = { nav.navigate("files/$id") }) { Text("文件") }
-                        OutlinedButton(onClick = { nav.navigate("players/$id") }) { Text("玩家") }
-                        OutlinedButton(onClick = { nav.navigate("backups/$id") }) { Text("备份") }
-                        OutlinedButton(onClick = { nav.navigate("plugins/$id") }) { Text("插件") }
-                        OutlinedButton(onClick = { showArgs = true }) { Text("参数") }
-                        OutlinedButton(onClick = { showDiag = true }) { Text("诊断") }
+                        OutlinedButton(onClick = { nav.navigate("files/$id") }) { Text(t("文件")) }
+                        OutlinedButton(onClick = { nav.navigate("players/$id") }) { Text(t("玩家")) }
+                        OutlinedButton(onClick = { nav.navigate("backups/$id") }) { Text(t("备份")) }
+                        OutlinedButton(onClick = { nav.navigate("plugins/$id") }) { Text(t("插件")) }
+                        OutlinedButton(onClick = { showArgs = true }) { Text(t("参数")) }
+                        OutlinedButton(onClick = { showDiag = true }) { Text(t("诊断")) }
                         OutlinedButton(
                             onClick = {
                                 testing = true
@@ -305,30 +308,30 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
                                                 inst.config.xmsMb, inst.config.xmxMb,
                                                 inst.config.mcVersion,
                                             )
-                                        }.getOrElse { "自检失败: ${it.message}" }
+                                        }.getOrElse { t("自检失败: %s", it.message) }
                                     }
                                     testing = false
                                 }
                             },
-                        ) { Text(if (testing) "自检中…" else "自检") }
+                        ) { Text(if (testing) t("自检中…") else t("自检")) }
                         OutlinedButton(
                             enabled = seriesProg.isEmpty(),
                             onClick = {
-                                seriesProg = "准备深诊…"
+                                seriesProg = t("准备深诊…")
                                 scope.launch {
                                     val report = withContext(Dispatchers.IO) {
                                         runCatching {
                                             JreSelfTest.runSeries(
                                                 ctx, inst.config.jreMajor, inst.config.mcVersion,
                                             ) { msg -> seriesProg = msg }
-                                        }.getOrElse { "深诊失败: ${it.message}" }
+                                        }.getOrElse { t("深诊失败: %s", it.message) }
                                     }
                                     seriesProg = ""
                                     seriesText = report
                                 }
                             },
-                        ) { Text("深诊") }
-                        OutlinedButton(onClick = { showDigest = true }) { Text("错误摘要") }
+                        ) { Text(t("深诊")) }
+                        OutlinedButton(onClick = { showDigest = true }) { Text(t("错误摘要")) }
                     }
 
                     Row(
@@ -339,7 +342,7 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
                             value = input,
                             onValueChange = { input = it },
                             modifier = Modifier.weight(1f),
-                            placeholder = { Text("输入命令，如 op Steve") },
+                            placeholder = { Text(t("输入命令，如 op Steve")) },
                             singleLine = true,
                         )
                         IconButton(onClick = {
@@ -347,7 +350,7 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
                                 controller.sendCommand(input.trim())
                                 input = ""
                             }
-                        }) { Icon(Icons.Filled.Send, contentDescription = "发送") }
+                        }) { Icon(Icons.Filled.Send, contentDescription = t("发送")) }
                     }
                 }
             }
@@ -357,7 +360,7 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
     if (showDigest) {
         AlertDialog(
             onDismissRequest = { showDigest = false },
-            title = { Text("错误摘要") },
+            title = { Text(t("错误摘要")) },
             text = {
                 SelectionContainer {
                     Text(
@@ -370,14 +373,14 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
                     )
                 }
             },
-            confirmButton = { TextButton(onClick = { showDigest = false }) { Text("关闭") } },
+            confirmButton = { TextButton(onClick = { showDigest = false }) { Text(t("关闭")) } },
         )
     }
 
     selfTestText?.let { text ->
         AlertDialog(
             onDismissRequest = { selfTestText = null },
-            title = { Text("JRE 自检结果") },
+            title = { Text(t("JRE 自检结果")) },
             text = {
                 SelectionContainer {
                     Text(
@@ -393,17 +396,17 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
             confirmButton = {
                 TextButton(onClick = {
                     clipboard.setText(AnnotatedString(text))
-                    vm.toast("已复制自检结果")
-                }) { Text("复制") }
+                    vm.toast(t("已复制自检结果"))
+                }) { Text(t("复制")) }
             },
-            dismissButton = { TextButton(onClick = { selfTestText = null }) { Text("关闭") } },
+            dismissButton = { TextButton(onClick = { selfTestText = null }) { Text(t("关闭")) } },
         )
     }
 
     seriesText?.let { text ->
         AlertDialog(
             onDismissRequest = { seriesText = null },
-            title = { Text("深诊结果") },
+            title = { Text(t("深诊结果")) },
             text = {
                 SelectionContainer {
                     Text(
@@ -419,10 +422,10 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
             confirmButton = {
                 TextButton(onClick = {
                     clipboard.setText(AnnotatedString(text))
-                    vm.toast("已复制深诊结果")
-                }) { Text("复制全部") }
+                    vm.toast(t("已复制深诊结果"))
+                }) { Text(t("复制全部")) }
             },
-            dismissButton = { TextButton(onClick = { seriesText = null }) { Text("关闭") } },
+            dismissButton = { TextButton(onClick = { seriesText = null }) { Text(t("关闭")) } },
         )
     }
 
@@ -430,18 +433,18 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
         val tail = log.takeLast(80).joinToString("\n")
         val body = buildString {
             append(st.crashSummary.ifBlank {
-                "暂无崩溃记录（只有进程异常退出时才会自动生成）。\n\n"
+                t("暂无崩溃记录（只有进程异常退出时才会自动生成）。\n\n")
             })
             if (tail.isNotBlank()) {
-                append("\n=== 控制台最后 80 行 ===\n").append(tail)
+                append(t("\n=== 控制台最后 80 行 ===\n")).append(tail)
             }
             if (st.crashSummary.isBlank() && tail.isBlank()) {
-                append("\n把这里的内容复制发我，就能定位到具体原因。")
+                append(t("\n把这里的内容复制发我，就能定位到具体原因。"))
             }
         }
         AlertDialog(
             onDismissRequest = { showDiag = false },
-            title = { Text("崩溃诊断") },
+            title = { Text(t("崩溃诊断")) },
             text = {
                 SelectionContainer {
                     Text(
@@ -457,10 +460,10 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
             confirmButton = {
                 TextButton(onClick = {
                     clipboard.setText(AnnotatedString(body))
-                    vm.toast("已复制诊断信息")
-                }) { Text("复制全部") }
+                    vm.toast(t("已复制诊断信息"))
+                }) { Text(t("复制全部")) }
             },
-            dismissButton = { TextButton(onClick = { showDiag = false }) { Text("关闭") } },
+            dismissButton = { TextButton(onClick = { showDiag = false }) { Text(t("关闭")) } },
         )
     }
 
@@ -504,10 +507,10 @@ private fun ArgsDialog(
 
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("启动参数") },
+        title = { Text(t("启动参数")) },
         text = {
             Column(Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState())) {
-                Text("GC / JVM 预设", style = MaterialTheme.typography.titleSmall)
+                Text(t("GC / JVM 预设"), style = MaterialTheme.typography.titleSmall)
                 GcPreset.entries.forEach { p ->
                     Row(
                         Modifier.fillMaxWidth(),
@@ -527,7 +530,7 @@ private fun ArgsDialog(
 
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    "编译（JIT）预设 · 崩溃时从这里往下换",
+                    t("编译（JIT）预设 · 崩溃时从这里往下换"),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.error,
                 )
@@ -570,7 +573,7 @@ private fun ArgsDialog(
                 OutlinedTextField(
                     value = extra,
                     onValueChange = { extra = it },
-                    label = { Text("额外 JVM 参数（空格分隔）") },
+                    label = { Text(t("额外 JVM 参数（空格分隔）")) },
                     placeholder = { Text("-XX:+UseSerialGC -XX:-UseCompressedOops") },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -579,14 +582,14 @@ private fun ArgsDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Switch(checked = autoRestart, onCheckedChange = { autoRestart = it })
                     Spacer(Modifier.width(8.dp))
-                    Text("崩溃后自动重启（最多 5 次）", style = MaterialTheme.typography.bodySmall)
+                    Text(t("崩溃后自动重启（最多 5 次）"), style = MaterialTheme.typography.bodySmall)
                 }
 
                 Spacer(Modifier.height(10.dp))
-                Text("实际命令行", style = MaterialTheme.typography.titleSmall)
+                Text(t("实际命令行"), style = MaterialTheme.typography.titleSmall)
                 SelectionContainer {
                     Text(
-                        preview.ifBlank { "（无法预览）" },
+                        preview.ifBlank { t("（无法预览）") },
                         fontFamily = FontFamily.Monospace,
                         fontSize = 10.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -608,11 +611,11 @@ private fun ArgsDialog(
                         )
                     )
                 )
-                vm.toast("已保存，下次启动生效")
+                vm.toast(t("已保存，下次启动生效"))
                 onClose()
-            }) { Text("保存") }
+            }) { Text(t("保存")) }
         },
-        dismissButton = { TextButton(onClick = onClose) { Text("取消") } },
+        dismissButton = { TextButton(onClick = onClose) { Text(t("取消")) } },
     )
 }
 

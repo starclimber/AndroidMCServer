@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import dev.tinymcserver.app.core.i18n.t
 
 /**
  * 各服务端发行版的版本列表与下载地址解析。
@@ -64,7 +65,7 @@ object ServerProvider {
         val vjson = json.parseToJsonElement(Http.get(url)).jsonObject
         return vjson["downloads"]?.jsonObject?.get("server")?.jsonObject
             ?.get("url")?.jsonPrimitive?.content
-            ?: throw RuntimeException("vanilla $version 无服务端下载")
+            ?: throw RuntimeException(t("vanilla %s 无服务端下载", version))
     }
 
     // ---------------- Paper / Folia (fill v3) ----------------
@@ -83,10 +84,10 @@ object ServerProvider {
             Http.get("$PAPER_API/projects/$project/versions/$version/builds")
         ).jsonArray
         val latest = arr.maxByOrNull { it.jsonObject["id"]?.jsonPrimitive?.content?.toIntOrNull() ?: -1 }
-            ?: throw RuntimeException("$project $version 无构建")
+            ?: throw RuntimeException(t("%s %s 无构建", project, version))
         return latest.jsonObject["downloads"]?.jsonObject?.get("server:default")
             ?.jsonObject?.get("url")?.jsonPrimitive?.content
-            ?: throw RuntimeException("$project $version 无下载地址")
+            ?: throw RuntimeException(t("%s %s 无下载地址", project, version))
     }
 
     // ---------------- Purpur ----------------

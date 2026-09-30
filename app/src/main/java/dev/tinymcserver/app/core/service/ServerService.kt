@@ -23,6 +23,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import dev.tinymcserver.app.core.i18n.t
 
 /** 服务端运行期间的前台服务，持有 WakeLock + WifiLock 保活 */
 class ServerService : Service() {
@@ -98,13 +99,13 @@ class ServerService : Service() {
         val running = ServerManager.all().filter {
             it.state.value.state == InstanceState.RUNNING
         }
-        val title = if (running.isEmpty()) "Tiny MC Server" else "服务端运行中 (${running.size})"
+        val title = if (running.isEmpty()) "Tiny MC Server" else t("服务端运行中 (%s)", running.size)
         val text = running.joinToString("  ·  ") { c ->
             val s = c.state.value
             val cfg = c.instance.config
             "${cfg.name} | ${cfg.type.display} ${cfg.mcVersion} | :${cfg.port} | " +
-                "玩家 ${s.players}/${s.maxPlayers} | 内存 ${s.memoryUsedMb}/${s.memoryMaxMb}MB"
-        }.ifEmpty { "正在初始化…" }
+                t("玩家 %s/%s | 内存 %s/%sMB", s.players, s.maxPlayers, s.memoryUsedMb, s.memoryMaxMb)
+        }.ifEmpty { t("正在初始化…") }
 
         val open = PendingIntent.getActivity(
             this, 0, Intent(this, MainActivity::class.java),
@@ -122,7 +123,7 @@ class ServerService : Service() {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setContentIntent(open)
-            .addAction(0, "停止全部", stop)
+            .addAction(0, t("停止全部"), stop)
             .build()
     }
 

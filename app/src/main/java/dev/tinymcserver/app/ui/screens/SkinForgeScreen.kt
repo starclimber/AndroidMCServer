@@ -40,6 +40,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -53,6 +54,7 @@ import dev.tinymcserver.app.ui.components.SectionTitle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import dev.tinymcserver.app.core.i18n.t
 
 /**
  * 皮肤工坊：按「种子 + 风格」确定性生成 64×64 的 Minecraft Java 版皮肤。
@@ -87,7 +89,7 @@ fun SkinForgeScreen(nav: NavController) {
             preview = result.second
             info = result.third
         } else {
-            info = "生成失败"
+            info = t("生成失败")
             bitmap = null
             preview = null
         }
@@ -108,7 +110,7 @@ fun SkinForgeScreen(nav: NavController) {
                 }.getOrDefault(false)
             }
             Toast.makeText(
-                ctx, if (ok != false) "已导出 PNG" else "导出失败", Toast.LENGTH_SHORT,
+                ctx, if (ok != false) t("已导出 PNG") else t("导出失败"), Toast.LENGTH_SHORT,
             ).show()
         }
     }
@@ -116,10 +118,10 @@ fun SkinForgeScreen(nav: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("皮肤工坊") },
+                title = { Text(t("皮肤工坊")) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },
             )
@@ -129,18 +131,18 @@ fun SkinForgeScreen(nav: NavController) {
             Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState())
                 .padding(horizontal = 12.dp),
         ) {
-            SectionTitle("预览")
+            SectionTitle(t("预览"))
             FieldCard {
                 Box(Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
                     when {
                         busy && preview == null -> CircularProgressIndicator()
                         preview != null -> Image(
                             bitmap = preview!!.asImageBitmap(),
-                            contentDescription = "皮肤预览",
+                            contentDescription = t("皮肤预览"),
                             modifier = Modifier.size(256.dp),
                             filterQuality = FilterQuality.None,
                         )
-                        else -> Text("无法生成")
+                        else -> Text(t("无法生成"), textAlign = TextAlign.Center)
                     }
                 }
                 if (info.isNotBlank()) {
@@ -152,15 +154,15 @@ fun SkinForgeScreen(nav: NavController) {
                     )
                 }
                 Text(
-                    "64×64 Java 版皮肤（双层），同种子必得同一张。",
+                    t("64×64 Java 版皮肤（双层），同种子必得同一张。"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            SectionTitle("种子")
+            SectionTitle(t("种子"))
             FieldCard {
-                LabeledField("种子（可自定义，同种子同结果）", seed, { seed = it })
+                LabeledField(t("种子（可自定义，同种子同结果）"), seed, { seed = it })
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(
                         onClick = { seed = SkinForge.randomSeed() },
@@ -168,7 +170,7 @@ fun SkinForgeScreen(nav: NavController) {
                     ) {
                         Icon(Icons.Filled.Casino, contentDescription = null,
                             modifier = Modifier.size(18.dp))
-                        Text("  换一个")
+                        Text(t("  换一个"))
                     }
                     OutlinedButton(
                         onClick = { saveLauncher.launch("skin_$seed.png") },
@@ -177,19 +179,19 @@ fun SkinForgeScreen(nav: NavController) {
                     ) {
                         Icon(Icons.Filled.Share, contentDescription = null,
                             modifier = Modifier.size(18.dp))
-                        Text("  导出 PNG")
+                        Text(t("  导出 PNG"))
                     }
                 }
                 Text(
-                    "提示：把种子告诉朋友，对方输入同样的种子 + 同样的风格，就能得到一模一样的皮肤。",
+                    t("提示：把种子告诉朋友，对方输入同样的种子 + 同样的风格，就能得到一模一样的皮肤。"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            SectionTitle("风格")
+            SectionTitle(t("风格"))
             FieldCard {
-                val chips = listOf("" to "自动") + SkinForge.STYLES
+                val chips = listOf("" to t("自动")) + SkinForge.STYLES
                 // 两行流式排布
                 chips.chunked(3).forEach { row ->
                     Row(
@@ -209,14 +211,14 @@ fun SkinForgeScreen(nav: NavController) {
                     }
                 }
                 Text(
-                    "「自动」= 由种子决定风格；选定具体风格后，种子只决定配色与五官。",
+                    t("「自动」= 由种子决定风格；选定具体风格后，种子只决定配色与五官。"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
             Text(
-                "皮肤由 SkinForge 算法程序化生成（约束式随机 + 明度护栏），非真人绘制。",
+                t("皮肤由 SkinForge 算法程序化生成（约束式随机 + 明度护栏），非真人绘制。"),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Normal,

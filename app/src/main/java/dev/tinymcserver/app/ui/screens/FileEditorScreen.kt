@@ -49,6 +49,7 @@ import dev.tinymcserver.app.core.storage.ServerProperties
 import dev.tinymcserver.app.ui.AppViewModel
 import dev.tinymcserver.app.ui.components.LabeledField
 import java.io.File
+import dev.tinymcserver.app.core.i18n.t
 
 private val TEXT_EXT = setOf(
     "properties", "yml", "yaml", "json", "txt", "log", "conf", "toml", "cfg", "mcmeta", "md", "sh", "ini"
@@ -60,7 +61,7 @@ fun FileEditorScreen(vm: AppViewModel, nav: NavController, id: String) {
     val ctx = LocalContext.current
     val inst = vm.instances.collectAsState().value.firstOrNull { it.id == id }
     if (inst == null) {
-        Text("实例不存在", Modifier.padding(16.dp)); return
+        Text(t("实例不存在"), Modifier.padding(16.dp)); return
     }
     val root = Paths.instanceDir(ctx, id)
     var tab by remember { mutableIntStateOf(0) }
@@ -69,10 +70,10 @@ fun FileEditorScreen(vm: AppViewModel, nav: NavController, id: String) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("文件 · ${inst.config.name}") },
+                title = { Text(t("文件 · %s", inst.config.name)) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },
             )
@@ -80,7 +81,7 @@ fun FileEditorScreen(vm: AppViewModel, nav: NavController, id: String) {
     ) { pad ->
         Column(Modifier.fillMaxSize().padding(pad)) {
             TabRow(selectedTabIndex = tab) {
-                listOf("服务器属性", "原始编辑", "文件浏览").forEachIndexed { i, t ->
+                listOf(t("服务器属性"), t("原始编辑"), t("文件浏览")).forEachIndexed { i, t ->
                     Tab(selected = tab == i, onClick = { tab = i }, text = { Text(t) })
                 }
             }
@@ -102,7 +103,7 @@ private fun PropertiesEditor(file: File, onSaved: () -> Unit) {
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp)) {
         Text(
-            "共 ${map.size} 项。左边中文是含义，括号里是 server.properties 里的原始键名。",
+            t("共 %s 项。左边中文是含义，括号里是 server.properties 里的原始键名。", map.size),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 8.dp),
@@ -123,7 +124,7 @@ private fun PropertiesEditor(file: File, onSaved: () -> Unit) {
         Button(
             onClick = { ServerProperties.write(file, map); onSaved() },
             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-        ) { Text("保存 server.properties") }
+        ) { Text(t("保存 server.properties")) }
     }
 }
 
@@ -141,7 +142,7 @@ private fun RawEditor(file: File, onSaved: () -> Unit) {
         Button(
             onClick = { file.writeText(text); onSaved() },
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-        ) { Text("保存") }
+        ) { Text(t("保存")) }
     }
 }
 
@@ -163,13 +164,13 @@ private fun FileBrowser(root: File, vm: AppViewModel) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    if (rel.isEmpty()) "🏠 服务端根目录" else "📁 ${rel.replace("/", " › ")}",
+                    if (rel.isEmpty()) t("🏠 服务端根目录") else "📁 ${rel.replace("/", " › ")}",
                     Modifier.weight(1f),
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 2,
                 )
                 if (rel.isNotEmpty()) {
-                    TextButton(onClick = { rel = rel.substringBeforeLast('/', "") }) { Text("上一级") }
+                    TextButton(onClick = { rel = rel.substringBeforeLast('/', "") }) { Text(t("上一级")) }
                 }
             }
         }
@@ -177,7 +178,7 @@ private fun FileBrowser(root: File, vm: AppViewModel) {
         val dirs = entries.count { it.isDirectory }
         val files = entries.size - dirs
         Text(
-            "共 ${entries.size} 项（$dirs 个文件夹 · $files 个文件）",
+            t("共 %s 项（%s 个文件夹 · %s 个文件）", entries.size, dirs, files),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(vertical = 8.dp),
@@ -185,7 +186,7 @@ private fun FileBrowser(root: File, vm: AppViewModel) {
 
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             if (entries.isEmpty()) {
-                Text("（空目录）", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(t("（空目录）"), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             entries.forEachIndexed { idx, f ->
                 val isDir = f.isDirectory
@@ -194,7 +195,7 @@ private fun FileBrowser(root: File, vm: AppViewModel) {
                         .clickable {
                             if (isDir) rel = f.relativeTo(root).path
                             else if (isText(f)) editing = f
-                            else vm.toast("非文本文件，无法编辑")
+                            else vm.toast(t("非文本文件，无法编辑"))
                         }
                         .padding(vertical = 10.dp, horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -241,7 +242,7 @@ private fun FileBrowser(root: File, vm: AppViewModel) {
             text = {
                 Column {
                     Text(
-                        "路径：${f.relativeTo(root).path} · ${humanSize(f.length())}",
+                        t("路径：%s · %s", f.relativeTo(root).path, humanSize(f.length())),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -254,11 +255,11 @@ private fun FileBrowser(root: File, vm: AppViewModel) {
                 }
             },
             confirmButton = {
-                TextButton(onClick = { f.writeText(text); editing = null; tick++; vm.toast("已保存") }) {
-                    Text("保存")
+                TextButton(onClick = { f.writeText(text); editing = null; tick++; vm.toast(t("已保存")) }) {
+                    Text(t("保存"))
                 }
             },
-            dismissButton = { TextButton(onClick = { editing = null }) { Text("取消") } },
+            dismissButton = { TextButton(onClick = { editing = null }) { Text(t("取消")) } },
         )
     }
 }

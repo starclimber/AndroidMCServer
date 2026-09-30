@@ -40,6 +40,13 @@ import dev.tinymcserver.app.ui.components.FieldCard
 import dev.tinymcserver.app.ui.components.LabeledField
 import dev.tinymcserver.app.ui.components.SectionTitle
 import kotlinx.coroutines.launch
+import dev.tinymcserver.app.core.i18n.t
+import dev.tinymcserver.app.core.i18n.AppLanguage
+import dev.tinymcserver.app.core.i18n.I18n
+import dev.tinymcserver.app.MainActivity
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,16 +58,17 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController) {
     var rcon by remember { mutableStateOf(Settings.getRconPassword(ctx)) }
     var mirror by remember { mutableStateOf(Settings.mirrorBase) }
     var ignoringBattery by remember { mutableStateOf(BatteryUtil.isIgnoring(ctx)) }
+    var hideRecents by remember { mutableStateOf(Settings.hideFromRecents) }
 
     LaunchedEffect(refreshFlag) { ignoringBattery = BatteryUtil.isIgnoring(ctx) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("设置") },
+                title = { Text(t("设置")) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },
             )
@@ -70,16 +78,58 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController) {
             Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState())
                 .padding(horizontal = 12.dp),
         ) {
-            SectionTitle("JRE 管理")
+            SectionTitle(t("通用"))
+            FieldCard {
+                Text(t("语言"), style = MaterialTheme.typography.titleSmall)
+                I18n.revision
+                AppLanguage.entries.forEach { lang ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(
+                            selected = I18n.current == lang,
+                            onClick = { I18n.setLanguage(ctx, lang) },
+                        )
+                        Text(lang.displayName)
+                    }
+                }
+
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(t("从最近任务中隐藏"), style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            t("开启后，本应用不出现在系统「最近任务」列表中。"),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(
+                        checked = hideRecents,
+                        onCheckedChange = { v ->
+                            hideRecents = v
+                            Settings.hideFromRecents = v
+                            (ctx as? MainActivity)?.applyRecentsVisibility()
+                        },
+                    )
+                }
+            }
+
+            SectionTitle(t("JRE 管理"))
             FieldCard {
                 Text(
-                    "内置 JRE 打包在 APK 中，首次使用解压到私有目录。",
+                    t("内置 JRE 打包在 APK 中，首次使用解压到私有目录。"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 val bundled = vm.bundledJres()
                 if (bundled.isEmpty()) {
-                    Text("未检测到内置 JRE 归档。", color = MaterialTheme.colorScheme.error)
+                    Text(t("未检测到内置 JRE 归档。"), color = MaterialTheme.colorScheme.error)
                 }
                 bundled.forEach { major ->
                     val installed = vm.jreInstalled(major)
@@ -91,9 +141,9 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController) {
                             Text("JRE $major", style = MaterialTheme.typography.titleSmall)
                             Text(
                                 if (installed)
-                                    "已安装 · ${vm.jreVersionLabel(major)} · " +
+                                    t("已安装 · %s · ", vm.jreVersionLabel(major)) +
                                         "${"%.0f".format(vm.jreSize(major) / 1048576.0)} MB"
-                                else "未解压",
+                                else t("未解压"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -104,10 +154,10 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController) {
                                     JreManager.uninstall(ctx, major)
                                     refreshFlag++
                                 }
-                            }) { Text("重装") }
+                            }) { Text(t("重装")) }
                         } else {
                             Button(onClick = { vm.installJre(major) { refreshFlag++ } }) {
-                                Text("解压安装")
+                                Text(t("解压安装"))
                             }
                         }
                     }
@@ -115,14 +165,14 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController) {
                 OutlinedButton(
                     onClick = { vm.installJre(21) { refreshFlag++ } },
                     modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                ) { Text("一键安装 JRE 21（推荐）") }
+                ) { Text(t("一键安装 JRE 21（推荐）")) }
             }
 
-            SectionTitle("保活")
+            SectionTitle(t("保活"))
             FieldCard {
                 Text(
-                    if (ignoringBattery) "已加入电池优化白名单 ✅"
-                    else "尚未加入电池优化白名单，后台可能被系统杀掉 ❌",
+                    if (ignoringBattery) t("已加入电池优化白名单 ✅")
+                    else t("尚未加入电池优化白名单，后台可能被系统杀掉 ❌"),
                     color = if (ignoringBattery) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.error,
                 )
@@ -134,46 +184,46 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController) {
                             }
                     },
                     modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                ) { Text("关闭电池优化 / 加入白名单") }
+                ) { Text(t("关闭电池优化 / 加入白名单")) }
                 Text(
-                    "服务端运行时会启动前台服务，并持有 PARTIAL_WAKE_LOCK 与 WIFI_LOCK。",
+                    t("服务端运行时会启动前台服务，并持有 PARTIAL_WAKE_LOCK 与 WIFI_LOCK。"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            SectionTitle("下载源与镜像")
+            SectionTitle(t("下载源与镜像"))
             FieldCard {
-                Text("默认源：PaperMC / Purpur / Folia / Mojang 官方。可填写镜像前缀。")
-                LabeledField("镜像前缀", mirror, { mirror = it })
+                Text(t("默认源：PaperMC / Purpur / Folia / Mojang 官方。可填写镜像前缀。"))
+                LabeledField(t("镜像前缀"), mirror, { mirror = it })
                 Button(
-                    onClick = { Settings.mirrorBase = mirror.trim(); vm.toast("已保存镜像设置") },
+                    onClick = { Settings.mirrorBase = mirror.trim(); vm.toast(t("已保存镜像设置")) },
                     modifier = Modifier.padding(top = 6.dp),
-                ) { Text("保存") }
+                ) { Text(t("保存")) }
             }
 
-            SectionTitle("存储")
+            SectionTitle(t("存储"))
             FieldCard {
-                Text("实例默认存储在应用私有目录，无需存储权限。")
-                OutlinedButton(onClick = { vm.toast("请到实例「文件」页导出到外置存储") }) {
-                    Text("迁移到 SAF 外置存储（导出）")
+                Text(t("实例默认存储在应用私有目录，无需存储权限。"))
+                OutlinedButton(onClick = { vm.toast(t("请到实例「文件」页导出到外置存储")) }) {
+                    Text(t("迁移到 SAF 外置存储（导出）"))
                 }
             }
 
             SectionTitle("RCON")
             FieldCard {
-                Text("RCON 密码使用 Android Keystore 加密存储。")
-                LabeledField("RCON 密码", rcon, { rcon = it })
+                Text(t("RCON 密码使用 Android Keystore 加密存储。"))
+                LabeledField(t("RCON 密码"), rcon, { rcon = it })
                 Button(
-                    onClick = { Settings.setRconPassword(ctx, rcon); vm.toast("已加密保存") },
+                    onClick = { Settings.setRconPassword(ctx, rcon); vm.toast(t("已加密保存")) },
                     modifier = Modifier.padding(top = 6.dp),
-                ) { Text("保存密码") }
+                ) { Text(t("保存密码")) }
             }
 
-            SectionTitle("关于")
+            SectionTitle(t("关于"))
             FieldCard {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { nav.navigate("about") }) { Text("关于本应用") }
+                    OutlinedButton(onClick = { nav.navigate("about") }) { Text(t("关于本应用")) }
                 }
             }
             Text(" ", Modifier.padding(12.dp))

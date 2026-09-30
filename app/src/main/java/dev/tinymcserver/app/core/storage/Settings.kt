@@ -26,9 +26,10 @@ object Settings {
         return CryptoUtil.decrypt(enc) ?: ""
     }
 
-    // 语言（预留）
-    fun language(ctx: Context): String = sp(ctx).getString("language", "zh_cn") ?: "zh_cn"
-    fun setLanguage(ctx: Context, v: String) { sp(ctx).edit().putString("language", v).apply() }
+    // 是否从系统「最近任务」列表中隐藏本应用
+    var hideFromRecents: Boolean
+        get() = ctxHolder?.let { sp(it).getBoolean("hide_from_recents", false) } ?: false
+        set(v) { ctxHolder?.let { sp(it).edit().putBoolean("hide_from_recents", v).apply() } }
 
     private var ctxHolder: Context? = null
     fun attach(ctx: Context) { ctxHolder = ctx.applicationContext }

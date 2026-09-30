@@ -13,6 +13,7 @@ import dev.tinymcserver.app.MainActivity
 import dev.tinymcserver.app.R
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import dev.tinymcserver.app.core.i18n.t
 
 /**
  * 下载 / 解压进度通知：带进度条与「取消」按钮。
@@ -41,7 +42,7 @@ object DownloadNotifier {
         activeTasks.add(taskId)
         lastTaskId.set(taskId)
         ensureChannel(ctx)
-        post(ctx, taskId, title, "准备中…", 0, true)
+        post(ctx, taskId, title, t("准备中…"), 0, true)
         return taskId
     }
 
@@ -106,7 +107,7 @@ object DownloadNotifier {
                 .setOngoing(true)
                 .setContentIntent(open)
                 .setProgress(100, pct, indeterminate)
-                .addAction(0, "取消", cancel)
+                .addAction(0, t("取消"), cancel)
                 .build()
             NotificationManagerCompat.from(ctx).notify(taskId, n)
         }
@@ -117,8 +118,8 @@ object DownloadNotifier {
             val nm = ctx.getSystemService(NotificationManager::class.java) ?: return
             if (nm.getNotificationChannel(CHANNEL_ID) == null) {
                 nm.createNotificationChannel(
-                    NotificationChannel(CHANNEL_ID, "下载进度", NotificationManager.IMPORTANCE_LOW)
-                        .apply { description = "服务端 / 插件的下载与 JRE 解压进度" },
+                    NotificationChannel(CHANNEL_ID, t("下载进度"), NotificationManager.IMPORTANCE_LOW)
+                        .apply { description = t("服务端 / 插件的下载与 JRE 解压进度") },
                 )
             }
         }

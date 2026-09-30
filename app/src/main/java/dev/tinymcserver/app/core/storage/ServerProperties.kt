@@ -3,73 +3,75 @@ package dev.tinymcserver.app.core.storage
 import dev.tinymcserver.app.core.model.InstanceConfig
 import java.io.File
 import java.util.LinkedHashMap
+import dev.tinymcserver.app.core.i18n.t
 
 /** server.properties 读写（保留未知键，顺序稳定） */
 object ServerProperties {
 
     /** 常见键 → 中文名（用于「服务器属性」页，避免满屏英文看不懂） */
-    private val LABELS = mapOf(
-        "accepts-transfers" to "接受跨服转移",
-        "allow-flight" to "允许飞行",
-        "allow-nether" to "允许下界",
-        "broadcast-console-to-ops" to "广播控制台到 OP",
-        "broadcast-rcon-to-ops" to "广播 RCON 到 OP",
-        "difficulty" to "难度",
-        "enable-command-block" to "启用命令方块",
-        "enable-jmx-monitoring" to "启用 JMX 监控",
-        "enable-query" to "启用 Query 协议",
-        "enable-rcon" to "启用 RCON",
-        "enable-status" to "服务器列表显示状态",
-        "enforce-secure-profile" to "强制安全聊天签名",
-        "enforce-whitelist" to "白名单强制执行",
-        "entity-broadcast-range-percentage" to "实体广播范围(%)",
-        "force-gamemode" to "强制默认游戏模式",
-        "function-permission-level" to "函数权限等级",
-        "gamemode" to "默认游戏模式",
-        "generate-structures" to "生成结构",
-        "generator-settings" to "自定义生成设置",
-        "hardcore" to "极限模式",
-        "hide-online-players" to "隐藏在线玩家",
-        "initial-disabled-packs" to "初始禁用的数据包",
-        "initial-enabled-packs" to "初始启用的数据包",
-        "level-name" to "世界名称",
-        "level-seed" to "世界种子",
-        "level-type" to "世界类型",
-        "log-ips" to "记录玩家 IP",
-        "max-chained-neighbor-updates" to "连锁更新上限",
-        "max-players" to "最大玩家数",
-        "max-tick-time" to "单 tick 超时(毫秒)",
-        "max-world-size" to "世界边界最大半径",
-        "motd" to "服务器标语 MOTD",
-        "network-compression-threshold" to "网络压缩阈值",
-        "online-mode" to "正版验证",
-        "op-permission-level" to "OP 权限等级",
-        "player-idle-timeout" to "挂机踢出(分钟)",
-        "prevent-proxy-connections" to "阻止代理连接",
-        "pvp" to "允许玩家对战",
-        "query.port" to "Query 端口",
-        "rate-limit" to "数据包限流",
-        "rcon.password" to "RCON 密码",
-        "rcon.port" to "RCON 端口",
-        "region-file-compression" to "区域文件压缩算法",
-        "require-resource-pack" to "强制资源包",
-        "resource-pack" to "资源包下载地址",
-        "resource-pack-id" to "资源包 ID",
-        "resource-pack-prompt" to "资源包提示文本",
-        "resource-pack-sha1" to "资源包 SHA1",
-        "server-ip" to "监听地址",
-        "server-port" to "服务器端口",
-        "simulation-distance" to "模拟距离",
-        "spawn-animals" to "生成动物",
-        "spawn-monsters" to "生成怪物",
-        "spawn-npcs" to "生成村民",
-        "spawn-protection" to "出生点保护半径",
-        "sync-chunk-writes" to "同步写入区块",
-        "text-filtering-config" to "聊天过滤配置",
-        "text-filtering-version" to "聊天过滤版本",
-        "use-native-transport" to "使用 Linux 原生传输",
-        "view-distance" to "视距",
-        "white-list" to "启用白名单",
+    private val LABELS: Map<String, String>
+        get() = mapOf(
+        "accepts-transfers" to t("接受跨服转移"),
+        "allow-flight" to t("允许飞行"),
+        "allow-nether" to t("允许下界"),
+        "broadcast-console-to-ops" to t("广播控制台到 OP"),
+        "broadcast-rcon-to-ops" to t("广播 RCON 到 OP"),
+        "difficulty" to t("难度"),
+        "enable-command-block" to t("启用命令方块"),
+        "enable-jmx-monitoring" to t("启用 JMX 监控"),
+        "enable-query" to t("启用 Query 协议"),
+        "enable-rcon" to t("启用 RCON"),
+        "enable-status" to t("服务器列表显示状态"),
+        "enforce-secure-profile" to t("强制安全聊天签名"),
+        "enforce-whitelist" to t("白名单强制执行"),
+        "entity-broadcast-range-percentage" to t("实体广播范围(%)"),
+        "force-gamemode" to t("强制默认游戏模式"),
+        "function-permission-level" to t("函数权限等级"),
+        "gamemode" to t("默认游戏模式"),
+        "generate-structures" to t("生成结构"),
+        "generator-settings" to t("自定义生成设置"),
+        "hardcore" to t("极限模式"),
+        "hide-online-players" to t("隐藏在线玩家"),
+        "initial-disabled-packs" to t("初始禁用的数据包"),
+        "initial-enabled-packs" to t("初始启用的数据包"),
+        "level-name" to t("世界名称"),
+        "level-seed" to t("世界种子"),
+        "level-type" to t("世界类型"),
+        "log-ips" to t("记录玩家 IP"),
+        "max-chained-neighbor-updates" to t("连锁更新上限"),
+        "max-players" to t("最大玩家数"),
+        "max-tick-time" to t("单 tick 超时(毫秒)"),
+        "max-world-size" to t("世界边界最大半径"),
+        "motd" to t("服务器标语 MOTD"),
+        "network-compression-threshold" to t("网络压缩阈值"),
+        "online-mode" to t("正版验证"),
+        "op-permission-level" to t("OP 权限等级"),
+        "player-idle-timeout" to t("挂机踢出(分钟)"),
+        "prevent-proxy-connections" to t("阻止代理连接"),
+        "pvp" to t("允许玩家对战"),
+        "query.port" to t("Query 端口"),
+        "rate-limit" to t("数据包限流"),
+        "rcon.password" to t("RCON 密码"),
+        "rcon.port" to t("RCON 端口"),
+        "region-file-compression" to t("区域文件压缩算法"),
+        "require-resource-pack" to t("强制资源包"),
+        "resource-pack" to t("资源包下载地址"),
+        "resource-pack-id" to t("资源包 ID"),
+        "resource-pack-prompt" to t("资源包提示文本"),
+        "resource-pack-sha1" to t("资源包 SHA1"),
+        "server-ip" to t("监听地址"),
+        "server-port" to t("服务器端口"),
+        "simulation-distance" to t("模拟距离"),
+        "spawn-animals" to t("生成动物"),
+        "spawn-monsters" to t("生成怪物"),
+        "spawn-npcs" to t("生成村民"),
+        "spawn-protection" to t("出生点保护半径"),
+        "sync-chunk-writes" to t("同步写入区块"),
+        "text-filtering-config" to t("聊天过滤配置"),
+        "text-filtering-version" to t("聊天过滤版本"),
+        "use-native-transport" to t("使用 Linux 原生传输"),
+        "view-distance" to t("视距"),
+        "white-list" to t("启用白名单"),
     )
 
     /** 键的中文名；没有映射时返回原键 */
@@ -79,8 +81,8 @@ object ServerProperties {
     fun hint(key: String): String? = when (key) {
         "difficulty" -> "peaceful / easy / normal / hard"
         "gamemode" -> "survival / creative / adventure / spectator"
-        "online-mode" -> "true = 仅正版可进；false = 允许离线（局域网友好，公网易被冒充）"
-        "white-list" -> "true / false，配合 whitelist.json"
+        "online-mode" -> t("true = 仅正版可进；false = 允许离线（局域网友好，公网易被冒充）")
+        "white-list" -> t("true / false，配合 whitelist.json")
         "level-type" -> "minecraft:normal / flat / large_biomes / amplified"
         else -> null
     }
@@ -140,7 +142,7 @@ object EulaManager {
 
     fun accept(dir: File) {
         File(dir, "eula.txt").writeText(
-            "#Tiny MC Server 已获用户授权生成\n" +
+            t("#Tiny MC Server 已获用户授权生成\n") +
                 "#https://aka.ms/MinecraftEULA\n" +
                 "eula=true\n"
         )

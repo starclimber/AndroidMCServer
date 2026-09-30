@@ -41,6 +41,7 @@ import dev.tinymcserver.app.core.model.ServerType
 import dev.tinymcserver.app.core.plugin.PluginSearch
 import dev.tinymcserver.app.ui.AppViewModel
 import kotlinx.coroutines.launch
+import dev.tinymcserver.app.core.i18n.t
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +49,7 @@ fun PluginScreen(vm: AppViewModel, nav: NavController, id: String) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val inst = vm.instances.collectAsState().value.firstOrNull { it.id == id }
-    if (inst == null) { Text("实例不存在", Modifier.padding(16.dp)); return }
+    if (inst == null) { Text(t("实例不存在"), Modifier.padding(16.dp)); return }
 
     val loader = when (inst.config.type) {
         ServerType.PAPER -> "paper"
@@ -66,10 +67,10 @@ fun PluginScreen(vm: AppViewModel, nav: NavController, id: String) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("插件") },
+                title = { Text(t("插件")) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },
             )
@@ -77,12 +78,12 @@ fun PluginScreen(vm: AppViewModel, nav: NavController, id: String) {
     ) { pad ->
         Column(Modifier.fillMaxSize().padding(pad).padding(12.dp)) {
             if (inst.config.type == ServerType.VANILLA) {
-                Text("Vanilla 不支持插件，请使用 Paper/Purpur/Folia。",
+                Text(t("Vanilla 不支持插件，请使用 Paper/Purpur/Folia。"),
                     color = MaterialTheme.colorScheme.error)
                 return@Column
             }
             Text(
-                "来源 Modrinth · 目标 ${inst.config.type.display} ${inst.config.mcVersion}",
+                t("来源 Modrinth · 目标 %s %s", inst.config.type.display, inst.config.mcVersion),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -93,7 +94,7 @@ fun PluginScreen(vm: AppViewModel, nav: NavController, id: String) {
             ) {
                 OutlinedTextField(
                     value = query, onValueChange = { query = it },
-                    label = { Text("搜索插件") }, singleLine = true,
+                    label = { Text(t("搜索插件")) }, singleLine = true,
                     modifier = Modifier.weight(1f),
                 )
                 Button(onClick = {
@@ -104,15 +105,15 @@ fun PluginScreen(vm: AppViewModel, nav: NavController, id: String) {
                             val r = PluginSearch.search(query, inst.config.mcVersion, loader)
                             r
                         }.onSuccess { results = it }
-                            .onFailure { vm.toast("搜索失败：${it.message}") }
+                            .onFailure { vm.toast(t("搜索失败：%s", it.message)) }
                         busy = false
                     }
                 }) { Icon(Icons.Filled.Search, contentDescription = null) }
             }
-            if (busy) Text("搜索中…", style = MaterialTheme.typography.bodySmall)
+            if (busy) Text(t("搜索中…"), style = MaterialTheme.typography.bodySmall)
             if (!busy && results.isEmpty()) {
                 Text(
-                    "输入关键词后点搜索。插件来自 Modrinth，安装后需重启服务端生效。",
+                    t("输入关键词后点搜索。插件来自 Modrinth，安装后需重启服务端生效。"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -132,11 +133,11 @@ fun PluginScreen(vm: AppViewModel, nav: NavController, id: String) {
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
-                                Text("下载 ${hit.downloads}",
+                                Text(t("下载 %s", hit.downloads),
                                     style = MaterialTheme.typography.labelSmall)
                                 if (isDownloading) {
                                     Text(
-                                        "下载中…（可在通知栏查看进度或取消）",
+                                        t("下载中…（可在通知栏查看进度或取消）"),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary,
                                     )
@@ -147,7 +148,7 @@ fun PluginScreen(vm: AppViewModel, nav: NavController, id: String) {
                                     Modifier.size(24.dp), strokeWidth = 2.dp,
                                 )
                                 isDone -> Icon(
-                                    Icons.Filled.Check, contentDescription = "已下载",
+                                    Icons.Filled.Check, contentDescription = t("已下载"),
                                     tint = MaterialTheme.colorScheme.primary,
                                 )
                                 else -> IconButton(onClick = {
@@ -161,7 +162,7 @@ fun PluginScreen(vm: AppViewModel, nav: NavController, id: String) {
                                         downloadingId = null
                                         if (ok) doneIds = doneIds + hit.projectId
                                     }
-                                }) { Icon(Icons.Filled.Download, contentDescription = "下载") }
+                                }) { Icon(Icons.Filled.Download, contentDescription = t("下载")) }
                             }
                         }
                     }

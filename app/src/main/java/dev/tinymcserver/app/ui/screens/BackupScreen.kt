@@ -43,6 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import dev.tinymcserver.app.core.i18n.t
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +51,7 @@ fun BackupScreen(vm: AppViewModel, nav: NavController, id: String) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val inst = vm.instances.collectAsState().value.firstOrNull { it.id == id }
-    if (inst == null) { Text("实例不存在", Modifier.padding(16.dp)); return }
+    if (inst == null) { Text(t("实例不存在"), Modifier.padding(16.dp)); return }
 
     var tick by remember { mutableIntStateOf(0) }
     var exportTarget by remember { mutableStateOf<File?>(null) }
@@ -68,8 +69,8 @@ fun BackupScreen(vm: AppViewModel, nav: NavController, id: String) {
                             src.inputStream().use { it.copyTo(out) }
                         }
                     }
-                    vm.toast("已导出到所选位置")
-                }.onFailure { vm.toast("导出失败：${it.message}") }
+                    vm.toast(t("已导出到所选位置"))
+                }.onFailure { vm.toast(t("导出失败：%s", it.message)) }
             }
         }
         exportTarget = null
@@ -78,10 +79,10 @@ fun BackupScreen(vm: AppViewModel, nav: NavController, id: String) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("备份") },
+                title = { Text(t("备份")) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },
             )
@@ -97,26 +98,26 @@ fun BackupScreen(vm: AppViewModel, nav: NavController, id: String) {
                                 BackupManager.backup(ctx, id, worldOnly = false) { p, m ->
                                     vm.toast(m)
                                 }
-                                tick++; vm.toast("全量备份完成")
-                            }.onFailure { vm.toast("备份失败：${it.message}") }
+                                tick++; vm.toast(t("全量备份完成"))
+                            }.onFailure { vm.toast(t("备份失败：%s", it.message)) }
                         }
                     },
                     modifier = Modifier.weight(1f),
-                ) { Text("全量备份") }
+                ) { Text(t("全量备份")) }
                 Button(
                     onClick = {
                         scope.launch {
                             runCatching {
                                 BackupManager.backup(ctx, id, worldOnly = true)
-                                tick++; vm.toast("世界备份完成")
-                            }.onFailure { vm.toast("备份失败：${it.message}") }
+                                tick++; vm.toast(t("世界备份完成"))
+                            }.onFailure { vm.toast(t("备份失败：%s", it.message)) }
                         }
                     },
                     modifier = Modifier.weight(1f),
-                ) { Text("仅世界") }
+                ) { Text(t("仅世界")) }
             }
             Text(
-                "备份保存在实例目录 backups/ 下，可导出到外置存储。",
+                t("备份保存在实例目录 backups/ 下，可导出到外置存储。"),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 8.dp),
@@ -137,17 +138,17 @@ fun BackupScreen(vm: AppViewModel, nav: NavController, id: String) {
                                 scope.launch {
                                     runCatching {
                                         BackupManager.restore(ctx, id, zip)
-                                        vm.toast("已从备份恢复")
-                                    }.onFailure { vm.toast("恢复失败：${it.message}") }
+                                        vm.toast(t("已从备份恢复"))
+                                    }.onFailure { vm.toast(t("恢复失败：%s", it.message)) }
                                 }
-                            }) { Icon(Icons.Filled.Restore, contentDescription = "恢复") }
+                            }) { Icon(Icons.Filled.Restore, contentDescription = t("恢复")) }
                             IconButton(onClick = {
                                 exportTarget = zip
                                 exportLauncher.launch(zip.name)
-                            }) { Icon(Icons.Filled.Download, contentDescription = "导出") }
+                            }) { Icon(Icons.Filled.Download, contentDescription = t("导出")) }
                             IconButton(onClick = {
                                 BackupManager.delete(zip); tick++
-                            }) { Icon(Icons.Filled.Delete, contentDescription = "删除") }
+                            }) { Icon(Icons.Filled.Delete, contentDescription = t("删除")) }
                         }
                     }
                 }

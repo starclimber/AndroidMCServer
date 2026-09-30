@@ -17,6 +17,10 @@ It bundles a trimmed OpenJDK runtime so the device can create and run Vanilla, P
 - **Backups & player management**: back up / restore instances, manage whitelist / OP / ban lists.
 - **Skin Forge**: deterministically generate a 64×64 Minecraft Java skin from a "seed + style", exportable as PNG.
 - **Background reliability**: foreground service + WakeLock + WifiLock + battery-optimization whitelist guidance.
+- **Multilingual**: the UI and `server.properties` labels support Chinese / English / Français / Español / Русский; auto-detected on first launch and switchable in Settings.
+- **Hide from recents**: an opt-in setting (off by default) that removes the app from the system recents list.
+- **Multilingual**: the UI and `server.properties` labels support Chinese / English / Français / Español / Русский; auto-detected on first launch and switchable in Settings.
+- **Hide from recents**: an opt-in setting (off by default) that removes the app from the system recents list.
 
 ## Requirements
 
@@ -130,6 +134,10 @@ RELEASE_KEY_PASSWORD=<password>
 ```
 
 Both `local.properties` and the keystore file are listed in `.gitignore` and are never committed.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

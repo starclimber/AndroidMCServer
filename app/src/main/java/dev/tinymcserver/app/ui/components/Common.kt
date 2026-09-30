@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import dev.tinymcserver.app.core.i18n.t
 
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
@@ -88,11 +89,11 @@ fun IntStepper(
         Text(label, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { onValueChange((value - step).coerceIn(min, max)) }) {
-                Icon(Icons.Filled.Remove, contentDescription = "减小")
+                Icon(Icons.Filled.Remove, contentDescription = t("减小"))
             }
             Text(display?.invoke(value) ?: "$value$suffix", style = MaterialTheme.typography.titleMedium)
             IconButton(onClick = { onValueChange((value + step).coerceIn(min, max)) }) {
-                Icon(Icons.Filled.Add, contentDescription = "增大")
+                Icon(Icons.Filled.Add, contentDescription = t("增大"))
             }
         }
     }

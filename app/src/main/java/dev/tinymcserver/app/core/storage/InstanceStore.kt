@@ -7,6 +7,7 @@ import dev.tinymcserver.app.core.model.InstanceConfig
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import dev.tinymcserver.app.core.i18n.t
 
 /** 实例清单持久化（instances.json） */
 object InstanceStore {
@@ -49,7 +50,7 @@ object InstanceStore {
         "_" + (1000..9999).random()
 
     fun defaultConfig(): InstanceConfig = InstanceConfig(
-        name = "新服务器",
+        name = t("新服务器"),
         typeKey = ServerType.PAPER.key,
         jreMajor = 21,
     )

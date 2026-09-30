@@ -49,6 +49,7 @@ import dev.tinymcserver.app.ui.components.FieldCard
 import dev.tinymcserver.app.ui.components.IntStepper
 import dev.tinymcserver.app.ui.components.LabeledField
 import dev.tinymcserver.app.ui.components.SectionTitle
+import dev.tinymcserver.app.core.i18n.t
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,10 +94,10 @@ fun CreateWizardScreen(vm: AppViewModel, nav: NavController, editId: String?) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (editId == null) "新建服务器" else "编辑服务器") },
+                title = { Text(if (editId == null) t("新建服务器") else t("编辑服务器")) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },
             )
@@ -106,28 +107,28 @@ fun CreateWizardScreen(vm: AppViewModel, nav: NavController, editId: String?) {
             Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState())
                 .padding(horizontal = 12.dp),
         ) {
-            SectionTitle("基础")
+            SectionTitle(t("基础"))
             FieldCard {
-                LabeledField("名称", name, { name = it })
-                DropField("服务端类型", type.display, ServerType.entries.map { it.display }) { sel ->
+                LabeledField(t("名称"), name, { name = it })
+                DropField(t("服务端类型"), type.display, ServerType.entries.map { it.display }) { sel ->
                     type = ServerType.entries.first { it.display == sel }
                     mcVersion = ""
                 }
                 DropField(
-                    "MC 版本" + if (loadingVersions) "（加载中…）" else "（${versions.size} 个）",
-                    mcVersion.ifBlank { "点击选择" },
+                    t("MC 版本") + if (loadingVersions) t("（加载中…）") else t("（%s 个）", versions.size),
+                    mcVersion.ifBlank { t("点击选择") },
                     versions.take(200),
                 ) { mcVersion = it }
                 DropField(
                     "JRE" + when {
-                        !jreAutoOverride && autoJre > 0 -> "（自动匹配：JRE $autoJre）"
-                        !jreSupported -> "（该版本无可用 JRE）"
+                        !jreAutoOverride && autoJre > 0 -> t("（自动匹配：JRE %s）", autoJre)
+                        !jreSupported -> t("（该版本无可用 JRE）")
                         else -> ""
                     },
                     "JRE $effectiveJre",
-                    listOf("自动匹配 (JRE $effectiveJre)", "JRE 17", "JRE 21", "JRE 25"),
+                    listOf(t("自动匹配 (JRE %s)", effectiveJre), "JRE 17", "JRE 21", "JRE 25"),
                 ) { sel ->
-                    if (sel.startsWith("自动")) {
+                    if (sel.startsWith(t("自动"))) {
                         jreAutoOverride = false
                     } else {
                         jreAutoOverride = true
@@ -136,100 +137,100 @@ fun CreateWizardScreen(vm: AppViewModel, nav: NavController, editId: String?) {
                 }
                 if (!jreSupported) {
                     Text(
-                        "⚠️ MC 1.16 及更早需要 Java 8，本版本已不再内置 JRE 8（Android 上没有干净的独立来源）；请选择 1.17 及以上版本。",
+                        t("⚠️ MC 1.16 及更早需要 Java 8，本版本已不再内置 JRE 8（Android 上没有干净的独立来源）；请选择 1.17 及以上版本。"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
             }
 
-            SectionTitle("性能与内存")
+            SectionTitle(t("性能与内存"))
             FieldCard {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = {
                         xms = 1024; xmx = 2048; viewDistance = 6; simDistance = 4
-                    }) { Text("低配") }
+                    }) { Text(t("低配")) }
                     OutlinedButton(onClick = {
                         xms = 2048; xmx = 4096; viewDistance = 8; simDistance = 6
-                    }) { Text("均衡") }
+                    }) { Text(t("均衡")) }
                     OutlinedButton(onClick = {
                         xms = 4096; xmx = 6144; viewDistance = 10; simDistance = 8
-                    }) { Text("高性能") }
+                    }) { Text(t("高性能")) }
                 }
-                IntStepper("初始内存 Xms", xms, { xms = it }, 512, 16384, 512, " MB")
-                IntStepper("最大内存 Xmx", xmx, { xmx = it }, 512, 16384, 512, " MB")
+                IntStepper(t("初始内存 Xms"), xms, { xms = it }, 512, 16384, 512, " MB")
+                IntStepper(t("最大内存 Xmx"), xmx, { xmx = it }, 512, 16384, 512, " MB")
                 Text(
-                    "建议 2GB 起步、4–6GB 舒适；上限受设备可用 RAM 限制。",
+                    t("建议 2GB 起步、4–6GB 舒适；上限受设备可用 RAM 限制。"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                IntStepper("视距", viewDistance, { viewDistance = it }, 3, 16)
-                IntStepper("模拟距离", simDistance, { simDistance = it }, 3, 12)
+                IntStepper(t("视距"), viewDistance, { viewDistance = it }, 3, 16)
+                IntStepper(t("模拟距离"), simDistance, { simDistance = it }, 3, 12)
             }
 
-            SectionTitle("网络与规则")
+            SectionTitle(t("网络与规则"))
             FieldCard {
-                IntStepper("端口", port, { port = it }, 1024, 65535)
+                IntStepper(t("端口"), port, { port = it }, 1024, 65535)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("正版验证 online-mode", Modifier.weight(1f))
+                    Text(t("正版验证 online-mode"), Modifier.weight(1f))
                     Switch(checked = online, onCheckedChange = { online = it })
                 }
                 if (!online) {
                     Text(
-                        "关闭后为离线模式，仅建议局域网自用；公网会被冒充。",
+                        t("关闭后为离线模式，仅建议局域网自用；公网会被冒充。"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
-                DropField("难度", difficulty, listOf("peaceful", "easy", "normal", "hard")) {
+                DropField(t("难度"), difficulty, listOf("peaceful", "easy", "normal", "hard")) {
                     difficulty = it
                 }
-                IntStepper("最大玩家", maxPlayers, { maxPlayers = it }, 1, 200)
+                IntStepper(t("最大玩家"), maxPlayers, { maxPlayers = it }, 1, 200)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("开启白名单", Modifier.weight(1f))
+                    Text(t("开启白名单"), Modifier.weight(1f))
                     Switch(checked = whitelist, onCheckedChange = { whitelist = it })
                 }
                 LabeledField("MOTD", motd, { motd = it })
             }
 
-            SectionTitle("运行")
+            SectionTitle(t("运行"))
             FieldCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("崩溃自动重启", Modifier.weight(1f))
+                    Text(t("崩溃自动重启"), Modifier.weight(1f))
                     Switch(checked = autoRestart, onCheckedChange = { autoRestart = it })
                 }
                 if (type == ServerType.FOLIA) {
                     IntStepper(
-                        "Folia 区域线程上限", foliaThreads, { foliaThreads = it }, -1, 16,
-                        display = { if (it < 0) "自动" else "$it" },
+                        t("Folia 区域线程上限"), foliaThreads, { foliaThreads = it }, -1, 16,
+                        display = { if (it < 0) t("自动") else "$it" },
                     )
                     Text(
-                        "Folia 不支持多数 Bukkit/Spigot 插件，安装前请确认兼容性。区域线程按手机核心数保守设置，" +
-                            "不要全核拉满。「自动」= 由服务端按 CPU 核心数决定。",
+                        t("Folia 不支持多数 Bukkit/Spigot 插件，安装前请确认兼容性。区域线程按手机核心数保守设置，") +
+                            t("不要全核拉满。「自动」= 由服务端按 CPU 核心数决定。"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
             }
 
-            SectionTitle("合规")
+            SectionTitle(t("合规"))
             FieldCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = eulaAccepted, onCheckedChange = { eulaAccepted = it })
-                    Text("我已阅读并同意 Minecraft EULA", Modifier.weight(1f))
+                    Text(t("我已阅读并同意 Minecraft EULA"), Modifier.weight(1f))
                 }
-                TextButton(onClick = { showEula = true }) { Text("查看 EULA 摘要") }
+                TextButton(onClick = { showEula = true }) { Text(t("查看 EULA 摘要")) }
             }
 
             Button(
                 enabled = jreSupported,
                 onClick = {
                     if (!eulaAccepted) {
-                        vm.toast("请先同意 Mojang EULA")
+                        vm.toast(t("请先同意 Mojang EULA"))
                         return@Button
                     }
                     val cfg = InstanceConfig(
-                        name = name.ifBlank { "未命名服务器" },
+                        name = name.ifBlank { t("未命名服务器") },
                         typeKey = type.key,
                         mcVersion = mcVersion,
                         jreMajor = effectiveJre,
@@ -249,8 +250,8 @@ fun CreateWizardScreen(vm: AppViewModel, nav: NavController, editId: String?) {
                         // 创建即下载：先解压匹配的 JRE，再从官方源下载服务端 jar
                         vm.prepareInstance(inst) { ok ->
                             vm.toast(
-                                if (ok) "创建完成，可以启动了"
-                                else "实例已创建，下载未完成，可到控制台重试"
+                                if (ok) t("创建完成，可以启动了")
+                                else t("实例已创建，下载未完成，可到控制台重试")
                             )
                             nav.navigate("console/${inst.id}") {
                                 popUpTo("list") { inclusive = false }
@@ -260,12 +261,12 @@ fun CreateWizardScreen(vm: AppViewModel, nav: NavController, editId: String?) {
                     } else {
                         vm.saveInstance(existing.copy(config = cfg))
                         if (eulaAccepted) EulaManager.accept(Paths.instanceDir(ctx, existing.id))
-                        vm.toast("已保存")
+                        vm.toast(t("已保存"))
                     }
                     nav.popBackStack()
                 },
                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-            ) { Text(if (editId == null) "创建并下载服务端" else "保存") }
+            ) { Text(if (editId == null) t("创建并下载服务端") else t("保存")) }
         }
     }
 
@@ -275,12 +276,12 @@ fun CreateWizardScreen(vm: AppViewModel, nav: NavController, editId: String?) {
             title = { Text("Minecraft EULA") },
             text = {
                 Text(
-                    "使用 Minecraft 服务端软件需同意 Mojang 的最终用户许可协议（EULA）。" +
-                        "本应用不内置任何 Mojang 二进制，仅作为下载与启动器；所有服务端 jar 均从官方或授权源获取。" +
-                        "详情见 https://aka.ms/MinecraftEULA"
+                    t("使用 Minecraft 服务端软件需同意 Mojang 的最终用户许可协议（EULA）。") +
+                        t("本应用不内置任何 Mojang 二进制，仅作为下载与启动器；所有服务端 jar 均从官方或授权源获取。") +
+                        t("详情见 https://aka.ms/MinecraftEULA")
                 )
             },
-            confirmButton = { TextButton(onClick = { showEula = false }) { Text("知道了") } },
+            confirmButton = { TextButton(onClick = { showEula = false }) { Text(t("知道了")) } },
         )
     }
 }

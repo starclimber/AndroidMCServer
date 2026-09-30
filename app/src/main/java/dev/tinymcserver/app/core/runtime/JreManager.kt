@@ -12,6 +12,7 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
+import dev.tinymcserver.app.core.i18n.t
 
 /**
  * 从 APK assets 中解压内置 JRE 到私有目录。
@@ -91,7 +92,7 @@ object JreManager {
 
         val parts = listOf("universal.tar.xz", "bin-arm64.tar.xz")
             .filter { assetFileExists(ctx, assetPath(major, it)) }
-        if (parts.isEmpty()) throw RuntimeException("assets 中缺少 JRE $major 归档")
+        if (parts.isEmpty()) throw RuntimeException(t("assets 中缺少 JRE %s 归档", major))
 
         // 先解压到临时目录，成功后替换，避免半成品被误判为已安装
         val staging = File(ctx.cacheDir, "jre_install_$major")

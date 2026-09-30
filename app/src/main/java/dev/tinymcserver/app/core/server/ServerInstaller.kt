@@ -8,6 +8,7 @@ import dev.tinymcserver.app.core.storage.Settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import dev.tinymcserver.app.core.i18n.t
 
 /** 服务端 jar 下载 */
 object ServerInstaller {
@@ -21,15 +22,16 @@ object ServerInstaller {
         Settings.attach(ctx)
         val dir = Paths.instanceDir(ctx, instance.id)
         val jar = File(dir, instance.jarFile)
-        onProgress(0f, "解析下载地址…")
+        onProgress(0f, t("解析下载地址…"))
         val raw = ServerProvider.serverJarUrl(instance.config.type, instance.config.mcVersion)
         val url = withMirror(raw)
-        onProgress(0.02f, "下载 ${instance.config.type.display} ${instance.config.mcVersion}")
+        onProgress(0.02f, t("下载 %s %s", instance.config.type.display, instance.config.mcVersion))
         Http.download(url, jar, isCancelled) { read, total ->
             val p = if (total > 0) read.toFloat() / total else 0f
-            onProgress(p, "下载中 ${read / 1048576}MB / ${if (total > 0) "${total / 1048576}MB" else "?"}")
+            val totalTxt = if (total > 0) "${total / 1048576}MB" else "?"
+            onProgress(p, t("下载中 %sMB / %s", read / 1048576, totalTxt))
         }
-        onProgress(1f, "完成")
+        onProgress(1f, t("完成"))
         jar
     }
 

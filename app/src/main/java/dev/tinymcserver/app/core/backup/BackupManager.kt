@@ -11,6 +11,7 @@ import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import dev.tinymcserver.app.core.i18n.t
 
 /** 实例备份 / 恢复（zip） */
 object BackupManager {
@@ -41,7 +42,7 @@ object BackupManager {
                 zipInto(zos, r, r.name) { p, msg -> onProgress(p, msg) }
             }
         }
-        onProgress(1f, "已生成 ${out.name}")
+        onProgress(1f, t("已生成 %s", out.name))
         out
     }
 
@@ -91,7 +92,7 @@ object BackupManager {
                 e = zis.nextEntry
             }
         }
-        onProgress(1f, "恢复完成")
+        onProgress(1f, t("恢复完成"))
     }
 
     fun delete(zip: File): Boolean = zip.delete()

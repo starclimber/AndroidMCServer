@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.cancellation.CancellationException
 import java.io.File
+import dev.tinymcserver.app.core.i18n.t
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -53,7 +54,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         InstanceStore.remove(ctx, id)
         Paths.instanceDir(ctx, id).deleteRecursively()
         refresh()
-        toast("已删除实例")
+        toast(t("已删除实例"))
     }
 
     fun saveInstance(inst: ServerInstance) {
@@ -85,7 +86,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun clearVersionCache() { versionCache.clear() }
 
     fun installJar(inst: ServerInstance, onDone: (Boolean) -> Unit = {}) {
-        val title = "下载 ${inst.config.type.display} ${inst.config.mcVersion}"
+        val title = t("下载 %s %s", inst.config.type.display, inst.config.mcVersion)
         viewModelScope.launch {
             val taskId = DownloadNotifier.start(ctx, title)
             try {
@@ -95,18 +96,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 _progress.value = null
                 DownloadNotifier.finish(ctx, taskId)
-                toast("服务端 jar 下载完成")
+                toast(t("服务端 jar 下载完成"))
                 onDone(true)
             } catch (e: CancellationException) {
                 _progress.value = null
                 DownloadNotifier.finish(ctx, taskId)
                 cleanupPartial(inst)
-                toast("已取消下载")
+                toast(t("已取消下载"))
                 onDone(false)
             } catch (e: Exception) {
                 _progress.value = null
                 DownloadNotifier.finish(ctx, taskId)
-                toast("下载失败：${e.message}")
+                toast(t("下载失败：%s", e.message))
                 onDone(false)
             }
         }
@@ -116,14 +117,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             try {
                 JreManager.install(ctx, major) { part, idx, total ->
-                    _progress.value = ((idx.toFloat() / total) to "解压 $part")
+                    _progress.value = ((idx.toFloat() / total) to t("解压 %s", part))
                 }
                 _progress.value = null
-                toast("JRE $major 安装完成")
+                toast(t("JRE %s 安装完成", major))
                 onDone(true)
             } catch (e: Exception) {
                 _progress.value = null
-                toast("JRE 安装失败：${e.message}")
+                toast(t("JRE 安装失败：%s", e.message))
                 onDone(false)
             }
         }
@@ -131,37 +132,37 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** 一键准备：先解压匹配的 JRE，再从官方源下载服务端 jar */
     fun prepareInstance(inst: ServerInstance, onDone: (Boolean) -> Unit = {}) {
-        val title = "准备 ${inst.config.name}"
+        val title = t("准备 %s", inst.config.name)
         viewModelScope.launch {
             val taskId = DownloadNotifier.start(ctx, title)
             try {
                 if (!JreManager.isInstalled(ctx, inst.config.jreMajor)) {
-                    _progress.value = (0f to "解压 JRE ${inst.config.jreMajor}…")
-                    DownloadNotifier.progress(ctx, taskId, title, 0f, "解压 JRE ${inst.config.jreMajor}…")
+                    _progress.value = (0f to t("解压 JRE %s…", inst.config.jreMajor))
+                    DownloadNotifier.progress(ctx, taskId, title, 0f, t("解压 JRE %s…", inst.config.jreMajor))
                     JreManager.install(ctx, inst.config.jreMajor) { part, idx, total ->
-                        _progress.value = ((idx.toFloat() / total) to "解压 $part")
-                        DownloadNotifier.progress(ctx, taskId, title, idx.toFloat() / total, "解压 $part")
+                        _progress.value = ((idx.toFloat() / total) to t("解压 %s", part))
+                        DownloadNotifier.progress(ctx, taskId, title, idx.toFloat() / total, t("解压 %s", part))
                     }
                 }
-                _progress.value = (0.02f to "解析下载地址…")
+                _progress.value = (0.02f to t("解析下载地址…"))
                 ServerInstaller.install(ctx, inst, isCancelled = { DownloadNotifier.isCancelled(taskId) }) { p, s ->
                     _progress.value = (p to s)
                     DownloadNotifier.progress(ctx, taskId, title, p, s)
                 }
                 _progress.value = null
                 DownloadNotifier.finish(ctx, taskId)
-                toast("准备完成，可以启动了")
+                toast(t("准备完成，可以启动了"))
                 onDone(true)
             } catch (e: CancellationException) {
                 _progress.value = null
                 DownloadNotifier.finish(ctx, taskId)
                 cleanupPartial(inst)
-                toast("已取消")
+                toast(t("已取消"))
                 onDone(false)
             } catch (e: Exception) {
                 _progress.value = null
                 DownloadNotifier.finish(ctx, taskId)
-                toast("准备失败：${e.message}")
+                toast(t("准备失败：%s", e.message))
                 onDone(false)
             }
         }
@@ -189,15 +190,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         title: String,
         onDone: (Boolean) -> Unit = {},
     ) {
-        val jobTitle = "下载插件 $title"
+        val jobTitle = t("下载插件 %s", title)
         viewModelScope.launch {
             val taskId = DownloadNotifier.start(ctx, jobTitle)
             try {
                 val d = withContext(Dispatchers.IO) {
                     PluginSearch.pickDownload(projectId, inst.config.mcVersion, loader)
-                } ?: throw RuntimeException("Modrinth 上没有与该 MC 版本兼容的文件")
+                } ?: throw RuntimeException(t("Modrinth 上没有与该 MC 版本兼容的文件"))
                 if (d.size > 0 && d.size < 4096) {
-                    throw RuntimeException("上游文件异常（仅 ${d.size} 字节）")
+                    throw RuntimeException(t("上游文件异常（仅 %s 字节）", d.size))
                 }
                 val dir = File(Paths.instanceDir(ctx, inst.id), "plugins")
                 dir.mkdirs()
@@ -212,22 +213,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         expectedSize = d.size,
                     ) { read, total ->
                         val p = if (total > 0) read.toFloat() / total else 0f
+                        val totalTxt = if (total > 0) "${total / 1024}KB" else "?"
                         DownloadNotifier.progress(
                             ctx, taskId, jobTitle, p,
-                            "下载中 ${read / 1024}KB / ${if (total > 0) "${total / 1024}KB" else "?"}",
+                            t("下载中 %sKB / %s", read / 1024, totalTxt),
                         )
                     }
                 }
                 DownloadNotifier.finish(ctx, taskId)
-                toast("已下载 ${d.filename}（重启服务端后生效）")
+                toast(t("已下载 %s（重启服务端后生效）", d.filename))
                 onDone(true)
             } catch (e: CancellationException) {
                 DownloadNotifier.finish(ctx, taskId)
-                toast("已取消下载")
+                toast(t("已取消下载"))
                 onDone(false)
             } catch (e: Exception) {
                 DownloadNotifier.finish(ctx, taskId)
-                toast("插件下载失败：${e.message}")
+                toast(t("插件下载失败：%s", e.message))
                 onDone(false)
             }
         }
