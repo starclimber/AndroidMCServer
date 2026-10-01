@@ -17,7 +17,7 @@ object Http {
         .retryOnConnectionFailure(true)
         .build()
 
-    private const val UA = "AndroidMCServer/1.1 (Android)"
+    private const val UA = "TinyMCServer/1.0 (Android)"
 
     fun get(url: String): String {
         val req = Request.Builder().url(url).header("User-Agent", UA).build()

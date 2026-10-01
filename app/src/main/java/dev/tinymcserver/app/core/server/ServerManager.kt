@@ -121,32 +121,32 @@ class RuntimeController(
         }
     }
 
-    fun appendLocal(line: String) = appendLine("[AndroidMC] $line")
+    fun appendLocal(line: String) = appendLine("[Tiny] $line")
 
     // ---------------- 内部 ----------------
 
     private suspend fun doStart(restart: Boolean) = withContext(Dispatchers.IO) {
         try {
             if (!jar.exists()) {
-                appendLine(t("[AndroidMC] 未找到 server.jar，请先在实例中下载服务端"))
+                appendLine(t("[Tiny] 未找到 server.jar，请先在实例中下载服务端"))
                 _state.value = _state.value.copy(state = InstanceState.CRASHED)
                 return@withContext
             }
             if (!EulaManager.isAccepted(dir)) {
-                appendLine(t("[AndroidMC] 尚未同意 Mojang EULA，无法启动"))
+                appendLine(t("[Tiny] 尚未同意 Mojang EULA，无法启动"))
                 _state.value = _state.value.copy(state = InstanceState.CRASHED)
                 return@withContext
             }
             val major = instance.config.jreMajor
             val jreHome = Paths.jreHome(appCtx, major)
             if (!Paths.jreJava(appCtx, major).exists()) {
-                appendLine(t("[AndroidMC] 未安装 JRE %s，请到「设置 → JRE 管理」安装", major))
+                appendLine(t("[Tiny] 未安装 JRE %s，请到「设置 → JRE 管理」安装", major))
                 _state.value = _state.value.copy(state = InstanceState.CRASHED)
                 return@withContext
             }
             // 自愈：确保 bin/java 有可执行权限（否则 exec 报 error=13 Permission denied）
             if (!JreManager.ensureExecutable(appCtx, major)) {
-                appendLine(t("[AndroidMC] JRE %s 的 bin/java 不可执行，自动修复失败，请到设置里「重装」该 JRE", major))
+                appendLine(t("[Tiny] JRE %s 的 bin/java 不可执行，自动修复失败，请到设置里「重装」该 JRE", major))
                 _state.value = _state.value.copy(state = InstanceState.CRASHED)
                 return@withContext
             }
@@ -158,10 +158,10 @@ class RuntimeController(
                 state = InstanceState.STARTING,
                 startedAt = System.currentTimeMillis(),
             )
-            appendLine(t("[AndroidMC] 使用 JRE %s 启动：%s %s", major, instance.config.type.display, instance.config.mcVersion))
+            appendLine(t("[Tiny] 使用 JRE %s 启动：%s %s", major, instance.config.type.display, instance.config.mcVersion))
 
             val args = LaunchArgs.build(jreHome, instance.config, dir, jar)
-            appendLine(t("[AndroidMC] 启动参数: ") + args.drop(1).joinToString(" "))
+            appendLine(t("[Tiny] 启动参数: ") + args.drop(1).joinToString(" "))
             val pb = ProcessBuilder(args)
                 .directory(dir)
                 .redirectErrorStream(true)
@@ -187,7 +187,7 @@ class RuntimeController(
             process = proc
             writer = BufferedWriter(OutputStreamWriter(proc.outputStream, Charsets.UTF_8))
             val pid = ProcessUtil.findPid(jar.absolutePath)
-            appendLine(t("[AndroidMC] 进程已启动") + if (pid > 0) " (pid=$pid)" else "")
+            appendLine(t("[Tiny] 进程已启动") + if (pid > 0) " (pid=$pid)" else "")
             _state.value = _state.value.copy(state = InstanceState.RUNNING, pid = pid)
 
             startMemorySampler(jar.absolutePath)
@@ -200,7 +200,7 @@ class RuntimeController(
             val code = proc.waitFor()
             memJob?.cancel()
             appendLine(
-                t("[AndroidMC] 进程退出，返回码 %s", code) +
+                t("[Tiny] 进程退出，返回码 %s", code) +
                     if (code != 0) "（${CrashDiagnostics.explain(code)}）" else ""
             )
             if (!userStop && code != 0) {
@@ -218,7 +218,7 @@ class RuntimeController(
             )
             maybeAutoRestart(code)
         } catch (e: Exception) {
-            appendLine(t("[AndroidMC] 启动失败：%s", e.message))
+            appendLine(t("[Tiny] 启动失败：%s", e.message))
             _state.value = _state.value.copy(state = InstanceState.CRASHED)
             maybeAutoRestart(-1)
         }
@@ -266,7 +266,7 @@ class RuntimeController(
     private fun maybeAutoRestart(exitCode: Int) {
         if (userStop || !instance.config.autoRestart) return
         if (restartCount >= 5) {
-            appendLine(t("[AndroidMC] 自动重启已达上限(5)，停止。"))
+            appendLine(t("[Tiny] 自动重启已达上限(5)，停止。"))
             return
         }
         restartCount++

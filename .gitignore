@@ -22,4 +22,3 @@ release.keystore
 # OS
 .DS_Store
 Thumbs.db
-tools/selftest/classes/

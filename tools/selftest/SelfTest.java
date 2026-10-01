@@ -30,7 +30,7 @@ import javax.crypto.KeyAgreement;
 import javax.net.ssl.SSLContext;
 
 /**
- * Android MC Server 环境探测 jar。
+ * Tiny MC Server 环境探测 jar。
  *
  * 设计要点：每个动作都是「先打印、flush，再执行」，所以一旦进程被原生层 abort，
  * 最后一条打印就是崩溃点。模式：
@@ -60,7 +60,7 @@ public class SelfTest {
     public static void main(String[] args) {
         String mode = args.length > 0 ? args[0] : "all";
         String mc = args.length > 1 ? args[1] : "";
-        p("==== Android MC Server 探测 [mode=" + mode + "] 版本=" + (mc.isEmpty() ? "-" : mc) + " ====");
+        p("==== Tiny MC Server 探测 [mode=" + mode + "] 版本=" + (mc.isEmpty() ? "-" : mc) + " ====");
         switch (mode) {
             case "net1": net(1); break;
             case "net2": net(2); break;

@@ -99,7 +99,7 @@ class ServerService : Service() {
         val running = ServerManager.all().filter {
             it.state.value.state == InstanceState.RUNNING
         }
-        val title = if (running.isEmpty()) "Android MC Server" else t("服务端运行中 (%s)", running.size)
+        val title = if (running.isEmpty()) "Tiny MC Server" else t("服务端运行中 (%s)", running.size)
         val text = running.joinToString("  ·  ") { c ->
             val s = c.state.value
             val cfg = c.instance.config

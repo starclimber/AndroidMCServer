@@ -88,7 +88,7 @@ data class InstanceConfig(
     val simulationDistance: Int = 6,
     val maxPlayers: Int = 10,
     val whitelist: Boolean = false,
-    val motd: String = "Android MC Server",
+    val motd: String = "Tiny MC Server",
     val autoRestart: Boolean = false,
     val foliaRegionThreads: Int = -1,
     val extraJvmArgs: String = "",
