@@ -63,7 +63,7 @@ fun AboutScreen(nav: NavController) {
         Column(
             Modifier.fillMaxSize().padding(pad).padding(16.dp).verticalScroll(rememberScrollState()),
         ) {
-            Text("Tiny MC Server", style = MaterialTheme.typography.headlineSmall)
+            Text("Android MC Server", style = MaterialTheme.typography.headlineSmall)
             Text(
                 t("纯手机 Minecraft 服务端启动器 · v%s（%s）", versionName, versionCode),
                 style = MaterialTheme.typography.bodyMedium,

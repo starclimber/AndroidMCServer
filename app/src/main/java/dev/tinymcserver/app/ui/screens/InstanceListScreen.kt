@@ -65,7 +65,7 @@ fun InstanceListScreen(vm: AppViewModel, nav: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tiny MC Server") },
+                title = { Text("Android MC Server") },
                 actions = {
                     IconButton(onClick = { nav.navigate("skinforge") }) {
                         Icon(Icons.Filled.Face, contentDescription = t("皮肤工坊"))

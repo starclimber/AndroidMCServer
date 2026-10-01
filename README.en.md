@@ -1,4 +1,4 @@
-# Tiny MC Server
+# Android MC Server
 
 A Minecraft Java Edition **server launcher** that runs on an Android phone.
 
@@ -32,7 +32,7 @@ It bundles a trimmed OpenJDK runtime so the device can create and run Vanilla, P
 
 ## Installation
 
-1. Download the latest `TinyMCserver-<version>.apk` from the project's Releases page.
+1. Download the latest `AndroidMCServer-<version>.apk` from the project's Releases page.
 2. Allow installation from unknown sources on the device, then install the APK.
 
 ## Getting started

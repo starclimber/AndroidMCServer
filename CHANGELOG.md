@@ -5,6 +5,20 @@
 
 ---
 
+## [1.1.1] — 2026-10-01
+
+### 变更 / Changed
+
+- 项目更名为 **Android MC Server**（原 Tiny MC Server）。应用名称、关于页、通知标题与日志前缀同步更新。
+  **Renamed** the project to **Android MC Server** (formerly Tiny MC Server). The app name, About screen, notification title and log prefixes were updated accordingly.
+- 仓库地址同步变更为 <https://github.com/starclimber/AndroidMCServer>。
+  The repository URL is now <https://github.com/starclimber/AndroidMCServer>.
+- 包名（`dev.tinymcserver.app`）与签名密钥**保持不变**，可直接覆盖安装升级，无需卸载。
+  The package name (`dev.tinymcserver.app`) and signing key are **unchanged**, so this version upgrades in place without uninstalling.
+- 版本号 `1.1.0` → `1.1.1`（versionCode 3）。
+
+---
+
 ## [1.1.0] — 2026-09-30
 
 ### 新增 / Added
