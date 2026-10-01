@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions / 讨论区
+    url: https://github.com/starclimber/TinyMCServer/discussions
+    about: 一般性讨论和问题求助
