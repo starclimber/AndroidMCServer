@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<!-- ===== SEO 基础 ===== -->
+<title>Tiny MC Server — 在 Android 手机上运行 Minecraft Java 版服务端</title>
+<meta name="description" content="Tiny MC Server 是运行在 Android 手机上的 Minecraft Java 版服务端启动器。内置精简 OpenJDK 运行时，支持 Vanilla / Paper / Purpur / Folia，不需要 root，不依赖 Termux，不涉及客户端渲染。">
+<meta name="keywords" content="Minecraft,Minecraft服务端,MC开服,Android开服,手机开服,Paper,Purpur,Folia,Vanilla,Java版服务端,无需root,免Termux">
+<meta name="author" content="starclimber">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://starclimber.github.io/TinyMCServer/">
+<meta name="theme-color" content="#0f1115">
+<meta name="format-detection" content="telephone=no">
+
+<!-- ===== 站点验证（部署后必须替换，否则验证会失败） =====
+     Bing  ：打开 https://www.bing.com/webmasters/home → 添加站点
+             https://starclimber.github.io/TinyMCServer/
+             → 选「HTML Meta Tag」方式 → 把 Bing 给的 content 值替换下面这行
+     Google：https://search.google.com/search-console → 添加资源（网址前缀）
+             → HTML 标记方式 → 替换下面那行
+     ⚠️ 注意：GitHub Pages 是你唯一能改 <head> 的官方页面（github.com 仓库页改不了），
+        所以验证只能做在 Pages 站上，不能做在仓库页上。
+-->
+<meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE">
+<meta name="google-site-verification" content="YOUR_GOOGLE_VERIFICATION_CODE">
+
+<!-- ===== Open Graph / Twitter Card =====
+     og:image 建议 1200×630 PNG，放到仓库 docs/ 目录后填相对地址，
+     填好后取消注释（现在注释掉，避免搜索引擎抓到空图）
+<meta property="og:image" content="https://starclimber.github.io/TinyMCServer/og-image.png">
+<meta name="twitter:image" content="https://starclimber.github.io/TinyMCServer/og-image.png">
+-->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Tiny MC Server">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:title" content="Tiny MC Server — 在 Android 手机上运行 Minecraft Java 版服务端">
+<meta property="og:description" content="内置精简 OpenJDK 运行时，支持 Vanilla / Paper / Purpur / Folia。不需要 root，不依赖 Termux。">
+<meta property="og:url" content="https://starclimber.github.io/TinyMCServer/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tiny MC Server — 在 Android 手机上运行 Minecraft Java 版服务端">
+<meta name="twitter:description" content="内置精简 OpenJDK 运行时，支持 Vanilla / Paper / Purpur / Folia。不需要 root，不依赖 Termux。">
+
+<!-- ===== 结构化数据（让搜索引擎识别为应用） ===== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Tiny MC Server",
+  "description": "运行在 Android 手机上的 Minecraft Java 版服务端启动器。内置精简 OpenJDK 运行时，支持 Vanilla / Paper / Purpur / Folia，不需要 root，不依赖 Termux。",
+  "applicationCategory": "UtilitiesApplication",
+  "applicationSubCategory": "Minecraft Server Launcher",
+  "operatingSystem": "Android 8.0 (API 26) 及以上",
+  "softwareVersion": "1.1.0",
+  "fileSize": "107.7 MB",
+  "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+  "url": "https://starclimber.github.io/TinyMCServer/",
+  "downloadUrl": "https://github.com/starclimber/TinyMCServer/releases/download/v1.1.0/TinyMCserver-1.1.0.apk",
+  "codeRepository": "https://github.com/starclimber/TinyMCServer",
+  "programmingLanguage": "Kotlin",
+  "author": {
+    "@type": "Person",
+    "name": "starclimber",
+    "url": "https://github.com/starclimber"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CNY"
+  },
+  "featureList": [
+    "一键创建实例，自动匹配运行时并下载服务端 jar",
+    "实时控制台：日志、命令、就绪检查、崩溃诊断",
+    "文件管理：编辑 server.properties（中文标签）与文本文件",
+    "插件管理：从 Modrinth 搜索安装，带完整性校验",
+    "实例备份还原与白名单 / OP / 封禁管理",
+    "皮肤工坊：种子 + 风格确定性生成 64×64 皮肤，可导出 PNG",
+    "前台服务常驻 + WakeLock + WifiLock"
+  ]
+}
+</script>
+
+<style>
+:root{
+  --bg:#0f1115; --bg2:#161a21; --bg3:#1d222b;
+  --fg:#e8eaf0; --fg2:#a8b0c0; --fg3:#6b7488;
+  --accent:#5dbb63; --accent2:#3d9e46; --accent-soft:rgba(93,187,99,.12);
+  --line:rgba(255,255,255,.09);
+  --radius:14px;
+  --maxw:920px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--fg);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  line-height:1.7;font-size:16px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Header */
+header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(15,17,21,.82);backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.hd{display:flex;align-items:center;justify-content:space-between;height:56px;gap:12px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px;color:var(--fg);text-decoration:none;flex-shrink:0}
+.brand:hover{text-decoration:none}
+.logo{
+  width:26px;height:26px;border-radius:7px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:grid;place-items:center;font-size:14px;font-weight:800;color:#08120a;
+}
+nav{display:flex;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav a{
+  color:var(--fg2);font-size:14px;padding:6px 10px;border-radius:8px;white-space:nowrap;text-decoration:none;
+}
+nav a:hover{color:var(--fg);background:var(--bg3);text-decoration:none}
+
+/* Hero */
+.hero{padding:56px 0 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{
+  content:"";position:absolute;inset:-40% -10% auto -10%;height:340px;
+  background:radial-gradient(ellipse at 50% 40%,rgba(93,187,99,.16),transparent 68%);
+  pointer-events:none;
+}
+.hero>*{position:relative}
+.badge{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--accent-soft);border:1px solid rgba(93,187,99,.3);
+  color:var(--accent);font-size:13px;font-weight:600;
+  padding:5px 13px;border-radius:999px;margin-bottom:20px;
+}
+h1{font-size:clamp(30px,7.5vw,46px);line-height:1.18;letter-spacing:-.02em;font-weight:800;margin-bottom:16px}
+h1 .g{color:var(--accent)}
+.sub{font-size:clamp(15px,3.8vw,18px);color:var(--fg2);max-width:620px;margin:0 auto 30px}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:22px}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 26px;border-radius:11px;font-weight:700;font-size:15.5px;
+  text-decoration:none;transition:transform .15s,box-shadow .15s;
+}
+.btn:hover{text-decoration:none;transform:translateY(-2px)}
+.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#08120a;box-shadow:0 6px 22px rgba(93,187,99,.3)}
+.btn-s{background:var(--bg3);color:var(--fg);border:1px solid var(--line)}
+.meta{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;font-size:13px;color:var(--fg3)}
+.meta span{background:var(--bg2);border:1px solid var(--line);padding:4px 11px;border-radius:8px}
+
+/* Sections */
+section{padding:52px 0;border-top:1px solid var(--line)}
+h2{font-size:clamp(22px,5vw,28px);font-weight:750;margin-bottom:8px;letter-spacing:-.01em}
+.lead{color:var(--fg2);margin-bottom:28px;font-size:15px}
+
+/* Feature grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.card{
+  background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px;transition:border-color .18s,transform .18s;
+}
+.card:hover{border-color:rgba(93,187,99,.35);transform:translateY(-2px)}
+.card .ic{font-size:22px;margin-bottom:10px;display:block}
+.card h3{font-size:16px;font-weight:700;margin-bottom:7px}
+.card p{font-size:14px;color:var(--fg2);line-height:1.65}
+
+/* Steps */
+.steps{counter-reset:s;display:grid;gap:12px}
+.step{
+  display:flex;gap:14px;align-items:flex-start;
+  background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;
+}
+.step::before{
+  counter-increment:s;content:counter(s);
+  flex-shrink:0;width:26px;height:26px;border-radius:8px;
+  background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-size:13px;font-weight:800;margin-top:2px;
+}
+.step div{flex:1}
+.step b{display:block;font-size:15px;margin-bottom:3px}
+.step p{font-size:14px;color:var(--fg2)}
+code{
+  background:var(--bg3);border:1px solid var(--line);border-radius:5px;
+  padding:1.5px 6px;font-size:13px;
+  font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  color:var(--accent);word-break:break-all;
+}
+
+/* Table */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg2)}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:340px}
+th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:var(--bg3);font-weight:650;font-size:13px;color:var(--fg2);white-space:nowrap}
+td{color:var(--fg2)}
+tr:last-child td{border-bottom:none}
+
+/* Skin forge highlight */
+.skin{
+  background:linear-gradient(135deg,rgba(93,187,99,.09),rgba(93,187,99,.02));
+  border:1px solid rgba(93,187,99,.24);border-radius:var(--radius);padding:24px;
+}
+.styles{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0}
+.styles span{background:var(--bg3);border:1px solid var(--line);color:var(--fg2);font-size:13px;padding:5px 12px;border-radius:999px}
+.styles span.hl{background:var(--accent-soft);border-color:rgba(93,187,99,.3);color:var(--accent);font-weight:600}
+
+/* Note */
+.note{
+  background:var(--bg2);border-left:3px solid var(--accent);
+  border-radius:0 var(--radius) var(--radius) 0;padding:14px 18px;
+  font-size:14px;color:var(--fg2);margin-top:18px;
+}
+
+/* FAQ */
+.faq{display:grid;gap:10px}
+details{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+summary{
+  padding:15px 18px;font-weight:650;font-size:15px;cursor:pointer;
+  list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;
+}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--accent);font-size:19px;font-weight:400;flex-shrink:0;transition:transform .2s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{padding:0 18px 16px;font-size:14px;color:var(--fg2)}
+
+/* Bottom CTA */
+.bottom{text-align:center;padding:56px 0;border-top:1px solid var(--line)}
+
+/* Footer */
+footer{border-top:1px solid var(--line);padding:28px 0;font-size:13.5px;color:var(--fg3)}
+.fnav{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px}
+.fnav a{color:var(--fg2)}
+.fnav a:hover{color:var(--accent)}
+.copy{font-size:13px;color:var(--fg3)}
+
+@media(max-width:520px){
+  .hero{padding:40px 0 30px}
+  section{padding:40px 0}
+  .btn{padding:12px 20px;font-size:15px;width:100%;justify-content:center}
+  .cta{flex-direction:column}
+  .card{padding:17px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="#top"><span class="logo">T</span>Tiny MC Server</a>
+    <nav>
+      <a href="#features">特性</a>
+      <a href="#start">快速开始</a>
+      <a href="#server">服务端</a>
+      <a href="#skin">皮肤工坊</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- Hero -->
+<div class="wrap hero">
+  <span class="badge">● v1.1.0 · 开源免费</span>
+  <h1>在手机上跑 <span class="g">Minecraft Java 版</span><br>服务端</h1>
+  <p class="sub">
+    内置精简后的 OpenJDK 运行时，可让 Android 设备直接创建并运行
+    Vanilla、Paper、Purpur、Folia 服务端 —— 不需要 root，不依赖 Termux，也不涉及任何客户端渲染。
+  </p>
+  <div class="cta">
+    <a class="btn btn-p" href="https://github.com/starclimber/TinyMCServer/releases/download/v1.1.0/TinyMCserver-1.1.0.apk">
+      ↓ 下载 APK（107.7 MB）
+    </a>
+    <a class="btn btn-s" href="https://github.com/starclimber/TinyMCServer">查看源码</a>
+  </div>
+  <div class="meta">
+    <span>Android 8.0+</span>
+    <span>arm64-v8a</span>
+    <span>Kotlin · Jetpack Compose</span>
+    <span>AGPL-3.0</span>
+  </div>
+</div>
+
+<!-- 特性 -->
+<section id="features">
+  <div class="wrap">
+    <h2>特性</h2>
+    <p class="lead">把开服这件事，从敲命令变成点几下。</p>
+    <div class="grid">
+      <div class="card">
+        <span class="ic">⚡</span>
+        <h3>一键创建实例</h3>
+        <p>选择服务端类型与游戏版本，自动匹配运行时、自动下载对应服务端 jar。</p>
+      </div>
+      <div class="card">
+        <span class="ic">🖥️</span>
+        <h3>控制台</h3>
+        <p>实时日志、发送命令、就绪检查、崩溃诊断。</p>
+      </div>
+      <div class="card">
+        <span class="ic">📁</span>
+        <h3>文件管理</h3>
+        <p>浏览服务端目录，编辑 <code>server.properties</code>（带中文标签）与文本文件，可识别二进制文件。</p>
+      </div>
+      <div class="card">
+        <span class="ic">🧩</span>
+        <h3>插件管理</h3>
+        <p>从 Modrinth 搜索并安装插件，下载带完整性校验、进度显示与取消。</p>
+      </div>
+      <div class="card">
+        <span class="ic">💾</span>
+        <h3>备份与玩家管理</h3>
+        <p>实例备份 / 还原，白名单 / OP / 封禁管理。</p>
+      </div>
+      <div class="card">
+        <span class="ic">🎨</span>
+        <h3>皮肤工坊</h3>
+        <p>以「种子 + 风格」确定性生成 64×64 皮肤，可导出 PNG。</p>
+      </div>
+      <div class="card">
+        <span class="ic">🔒</span>
+        <h3>前台服务常驻</h3>
+        <p>前台服务 + WakeLock + WifiLock + 电池优化白名单引导，服务端持续运行。</p>
+      </div>
+      <div class="card">
+        <span class="ic">🌐</span>
+        <h3>多语言</h3>
+        <p>简体中文 / English / Français / Español / Русский，切换即时生效，无需重启。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 快速开始 -->
+<section id="start">
+  <div class="wrap">
+    <h2>快速开始</h2>
+    <p class="lead">四步，手机上就能开服。</p>
+    <div class="steps">
+      <div class="step"><div><b>新建实例</b><p>打开应用，点击右下角 <b>+</b> 新建实例。</p></div></div>
+      <div class="step"><div><b>填写配置</b><p>填写名称，选择服务端类型（Vanilla / Paper / Purpur / Folia）与游戏版本，设置内存，并同意 EULA。</p></div></div>
+      <div class="step"><div><b>创建并下载</b><p>点击「创建并下载服务端」：应用会自动解压运行时并下载服务端 jar（带进度提示），完成后进入控制台。</p></div></div>
+      <div class="step"><div><b>启动</b><p>在控制台点击「启动」即可运行。若下载中断，可在控制台的「就绪检查」中单独重试运行时或服务端。</p></div></div>
+    </div>
+    <div class="note">
+      安装：从 Releases 页面下载 <code>TinyMCserver-&lt;版本&gt;.apk</code>，在设备上允许安装来自未知来源的应用，然后安装。
+    </div>
+  </div>
+</section>
+
+<!-- 支持的服务端 -->
+<section id="server">
+  <div class="wrap">
+    <h2>支持的服务端</h2>
+    <p class="lead">本应用不内置任何服务端程序，所有 jar 均在创建实例时按需下载。</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th>类型</th><th>来源</th></tr></thead>
+        <tbody>
+          <tr><td>Vanilla</td><td>Mojang <code>launchermeta</code> manifest</td></tr>
+          <tr><td>Paper / Folia</td><td><code>fill.papermc.io</code> v3</td></tr>
+          <tr><td>Purpur</td><td><code>api.purpurmc.org</code> v2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">可在「设置 → 下载源与镜像」中配置镜像或代理前缀。</div>
+
+    <h2 style="margin-top:44px">内置运行时（JRE）</h2>
+    <p class="lead">内置三个版本的 OpenJDK 运行时（aarch64），来源为 Termux 官方仓库。</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th>游戏版本</th><th>运行时</th></tr></thead>
+        <tbody>
+          <tr><td>26.x 及以后</td><td>JRE 25</td></tr>
+          <tr><td>1.20.5 – 1.21.x</td><td>JRE 21</td></tr>
+          <tr><td>1.17 – 1.20.4</td><td>JRE 17</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 style="margin-top:44px">系统要求</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th>项</th><th>要求</th></tr></thead>
+        <tbody>
+          <tr><td>系统版本</td><td>Android 8.0（API 26）及以上</td></tr>
+          <tr><td>CPU 架构</td><td><code>arm64-v8a</code></td></tr>
+          <tr><td>存储</td><td>取决于服务端与 JRE，通常 200 MB 以上</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 皮肤工坊 -->
+<section id="skin">
+  <div class="wrap">
+    <div class="skin">
+      <h2>🎨 皮肤工坊</h2>
+      <p class="lead" style="margin-bottom:14px">
+        内置的皮肤生成器，为 Minecraft Java 版生成 64×64 的双层皮肤。
+        <b style="color:var(--fg)">入口</b>：首页右上角（设置按钮左侧）。
+      </p>
+      <div class="steps" style="margin-bottom:18px">
+        <div class="step"><div><b>输入种子</b><p>输入任意种子（或点击「换一个」随机生成）。</p></div></div>
+        <div class="step"><div><b>选择风格</b><p>选择风格，或选「自动」。</p></div></div>
+        <div class="step"><div><b>预览与导出</b><p>实时预览生成结果，并可导出为 PNG。</p></div></div>
+      </div>
+      <p style="font-size:14px;color:var(--fg2);margin-bottom:10px">
+        相同「种子 + 风格」<b style="color:var(--fg)">始终生成同一张皮肤</b>，便于分享与复现。
+      </p>
+      <p style="font-size:14px;color:var(--fg2);margin-bottom:4px">风格：</p>
+      <div class="styles">
+        <span class="hl">自动</span><span>旅人</span><span>兜帽</span><span>铁卫</span>
+        <span>秘术</span><span>游侠</span><span>义体</span><span>影刃</span><span>街头</span>
+      </div>
+      <p style="font-size:13.5px;color:var(--fg3);margin-top:14px">
+        <b style="color:var(--fg2)">实现</b>：约束式程序化生成 —— 以 xorshift32 作为随机源，
+        通过色相和谐关系、饱和度 / 明度护栏与明度对比检查来约束配色。纯 Kotlin 实现，不依赖第三方代码。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap">
+    <h2>常见问题</h2>
+    <p class="lead">先回答最常被问的几个。</p>
+    <div class="faq">
+      <details open>
+        <summary>需要 root 吗？需要 Termux 吗？</summary>
+        <p>都不需要。应用内置精简后的 OpenJDK 运行时，直接通过 <code>ProcessBuilder</code> 启动 <code>java -jar &lt;server.jar&gt; nogui</code>（headless）运行服务端，不依赖任何外部终端环境。</p>
+      </details>
+      <details>
+        <summary>APK 为什么有 100 多 MB？</summary>
+        <p>因为内置了三个版本的 OpenJDK 运行时（JRE 17 / 21 / 25，aarch64），以 <code>tar.xz</code> 归档形式随 APK 分发。首次使用某个版本时才解压到应用私有目录（先解压到暂存目录，成功后再原子替换）。</p>
+      </details>
+      <details>
+        <summary>数据存在哪里？需要存储权限吗？</summary>
+        <p>所有数据都保存在应用私有目录，<b style="color:var(--fg)">无需任何存储权限</b>：<br>
+        <code>/data/data/dev.tinymcserver.app/</code> 下的 <code>files/jre/jre{major}/</code>（运行时）与 <code>files/instances/&lt;id&gt;/</code>（server.jar、eula.txt、server.properties、plugins/、world/、backups/）。</p>
+      </details>
+      <details>
+        <summary>服务端能在后台持续运行吗？</summary>
+        <p>运行时会启动<b style="color:var(--fg)">前台服务</b>（<code>foregroundServiceType="dataSync|specialUse"</code>，<code>stopWithTask=false</code>）。通知栏显示服务端类型、版本、运行时、端口、玩家数与内存占用；运行期间持有 <code>PARTIAL_WAKE_LOCK</code> 与 <code>WIFI_LOCK</code>。建议在系统设置中把本应用加入电池优化白名单，以获得更稳定的运行。</p>
+      </details>
+      <details>
+        <summary>内置 JRE 的版权与来源？</summary>
+        <p>来自 Termux 官方仓库，以「聚合分发」方式随 APK 分发。本项目对其做了裁剪，并以自研实现替换了其中两个原生库：<code>libandroid-shmem</code>（SysV 共享内存，<code>memfd_create</code> + <code>mmap</code> 实现）与 <code>libandroid-spawn</code>（<code>posix_spawn</code>）。两个库源码位于 <code>tools/jrelibs/</code>，使用 Zig 交叉编译。完整版权与来源见仓库 <a href="https://github.com/starclimber/TinyMCServer/blob/main/NOTICE">NOTICE</a>。</p>
+      </details>
+      <details>
+        <summary>开源许可？</summary>
+        <p><b style="color:var(--fg)">GNU AGPL v3.0</b>，全文见仓库 <a href="https://github.com/starclimber/TinyMCServer/blob/main/LICENSE">LICENSE</a>。第三方组件来源与版权见 <a href="https://github.com/starclimber/TinyMCServer/blob/main/NOTICE">NOTICE</a>。</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- Bottom CTA -->
+<div class="wrap bottom">
+  <h2 style="margin-bottom:10px">现在就在手机上开一局</h2>
+  <p class="lead" style="margin-bottom:24px">下载 APK，四步建服，把世界装进口袋。</p>
+  <div class="cta">
+    <a class="btn btn-p" href="https://github.com/starclimber/TinyMCServer/releases/download/v1.1.0/TinyMCserver-1.1.0.apk">
+      ↓ 下载 v1.1.0 APK
+    </a>
+    <a class="btn btn-s" href="https://github.com/starclimber/TinyMCServer/releases">所有版本</a>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fnav">
+      <a href="https://github.com/starclimber/TinyMCServer">GitHub 仓库</a>
+      <a href="https://github.com/starclimber/TinyMCServer/releases">Releases</a>
+      <a href="https://github.com/starclimber/TinyMCServer/issues">提交 Issue</a>
+      <a href="https://github.com/starclimber/TinyMCServer/blob/main/README.en.md">English README</a>
+      <a href="https://github.com/starclimber/TinyMCServer/blob/main/NOTICE">NOTICE</a>
+      <a href="https://github.com/starclimber/TinyMCServer/blob/main/LICENSE">LICENSE</a>
+    </div>
+    <p class="copy">
+      Tiny MC Server · AGPL-3.0 · 本页不含任何服务端程序，服务端 jar 按 Mojang / PaperMC / Purpur 官方来源下载。
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
