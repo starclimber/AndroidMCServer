@@ -12,7 +12,6 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
-import androidx.core.app.ServiceCompat
 import dev.tinymcserver.app.MainActivity
 import dev.tinymcserver.app.R
 import dev.tinymcserver.app.core.model.InstanceState
@@ -57,17 +56,14 @@ class ServerService : Service() {
         if (intent?.action == ACTION_STOP_ALL) {
             ServerManager.stopAll()
         }
-        // targetSdk<29 时忽略前台服务类型（也用不到 API34 的时限规则）
-        if (applicationInfo.targetSdkVersion >= 29) {
-            val fgsType =
-                if (Build.VERSION.SDK_INT >= 34)
-                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-                else
-                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-            ServiceCompat.startForeground(this, NOTIF_ID, buildNotification(), fgsType)
-        } else {
-            startForeground(NOTIF_ID, buildNotification())
-        }
+        // 前台服务类型：本应用为了能 exec 私有目录里的 JRE，targetSdk 固定为 28（< 29），
+        // 系统不要求 startForeground 传类型 —— 因此也**不受 Android 15+
+        // 对 dataSync / mediaProcessing 类型「24 小时内最多 6 小时」的限制**
+        // （超时会回调 onTimeout()，不自行 stopSelf 就抛 RemoteServiceException）。
+        //
+        // 这里显式走「不传类型」的老路径，而不是按运行时读到的 targetSdk 去「自动」判断，
+        // 行为完全确定，不受任何系统自动替换影响。
+        startForeground(NOTIF_ID, buildNotification())
         if (loopJob == null) loopJob = scope.launch { supervise() }
         return START_STICKY
     }
@@ -143,7 +139,20 @@ class ServerService : Service() {
             acquire()
         }
         val wm = applicationContext.getSystemService(WifiManager::class.java)
-        wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "TinyMC::Wifi").apply {
+        // 坑（Android 14 / API 34 起，官方文档明确写了）：
+        //   WIFI_MODE_FULL_HIGH_PERF 被系统「自动替换」为 WIFI_MODE_FULL_LOW_LATENCY，
+        //   而 LOW_LATENCY 限制是「仅在亮屏、且应用处于前台时生效」——
+        //   也就是**灭屏后 WiFi 锁直接失效**。而 Minecraft 服务端恰恰是
+        //   灭屏后最需要保持联网（玩家还要连进来、区块还要同步）。
+        //
+        // 因此 API 34+ 主动退回 WIFI_MODE_FULL：它不随屏幕状态失效，
+        // 不是「高性能」，但能真正把 WiFi 芯片从休眠里拉住。
+        @Suppress("DEPRECATION")
+        val wifiMode = if (Build.VERSION.SDK_INT >= 34)
+            WifiManager.WIFI_MODE_FULL
+        else
+            WifiManager.WIFI_MODE_FULL_HIGH_PERF
+        wifiLock = wm.createWifiLock(wifiMode, "TinyMC::Wifi").apply {
             setReferenceCounted(false)
             acquire()
         }

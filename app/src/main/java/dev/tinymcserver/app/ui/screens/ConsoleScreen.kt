@@ -117,14 +117,25 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
     var tick by remember { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
 
+
     val jarFile = remember(tick, id) { File(Paths.instanceDir(ctx, id), inst.jarFile) }
     val jarReady = jarFile.exists()
     val jreReady = remember(tick, id) { vm.jreInstalled(inst.config.jreMajor) }
 
-    // 只有用户本来就停在底部时才自动跟随，避免翻看历史时被强行拽走
-    val atBottom by remember { derivedStateOf { !listState.canScrollForward } }
-    LaunchedEffect(log.size) {
-        if (log.isNotEmpty() && atBottom) listState.scrollToItem(log.size - 1)
+    // 「是否停在底部」：最后一项（含 1 行容差）可见即视为贴底。
+    // 用可见项判断比 canScrollForward 可靠 —— 列表尚未完成测量时后者会误判成"已在底部"，
+    // 于是用户往上翻看历史仍会被新日志拽回。
+    val atBottom by remember {
+        derivedStateOf {
+            val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()
+            // 尚无可见项 = 还没完成首次测量，按「贴底」处理，保证一进页面就滑到最新一行
+            last == null || last.index >= log.lastIndex - 1
+        }
+    }
+    // 默认自动下滑到最新一行；只有用户往上翻（不再贴底）时停止跟随，
+    // 回到底部后重新恢复自动跟随。key 用整个 log：内容变化（如最后一行被刷新）也能跟上。
+    LaunchedEffect(log) {
+        if (log.isNotEmpty() && atBottom) listState.scrollToItem(log.lastIndex)
     }
     LaunchedEffect(Unit) { vm.refresh() }
 
@@ -138,7 +149,7 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
             TopAppBar(
                 title = { Text(inst.config.name) },
                 navigationIcon = {
-                    IconButton(onClick = { nav.popBackStack() }) {
+                    IconButton(onClick = { if (nav.previousBackStackEntry != null) nav.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },
@@ -276,7 +287,7 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
                     ) {
                         if (!atBottom) {
                             AssistChip(
-                                onClick = { scope.launch { listState.scrollToItem(log.size - 1) } },
+                                onClick = { scope.launch { listState.scrollToItem(log.lastIndex) } },
                                 label = { Text(t("↓ 最新")) },
                             )
                         }
@@ -292,45 +303,17 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         OutlinedButton(onClick = { nav.navigate("files/$id") }) { Text(t("文件")) }
+                        OutlinedButton(onClick = { nav.navigate("config/$id") }) { Text(t("配置")) }
                         OutlinedButton(onClick = { nav.navigate("players/$id") }) { Text(t("玩家")) }
                         OutlinedButton(onClick = { nav.navigate("backups/$id") }) { Text(t("备份")) }
-                        OutlinedButton(onClick = { nav.navigate("plugins/$id") }) { Text(t("插件")) }
+                        OutlinedButton(onClick = { nav.navigate("pluginimport/$id") }) {
+                            Text(t("导入插件"))
+                        }
                         OutlinedButton(onClick = { showArgs = true }) { Text(t("参数")) }
-                        OutlinedButton(onClick = { showDiag = true }) { Text(t("诊断")) }
-                        OutlinedButton(
-                            onClick = {
-                                testing = true
-                                scope.launch {
-                                    selfTestText = withContext(Dispatchers.IO) {
-                                        runCatching {
-                                            JreSelfTest.runAll(
-                                                ctx, inst.config.jreMajor,
-                                                inst.config.xmsMb, inst.config.xmxMb,
-                                                inst.config.mcVersion,
-                                            )
-                                        }.getOrElse { t("自检失败: %s", it.message) }
-                                    }
-                                    testing = false
-                                }
-                            },
-                        ) { Text(if (testing) t("自检中…") else t("自检")) }
-                        OutlinedButton(
-                            enabled = seriesProg.isEmpty(),
-                            onClick = {
-                                seriesProg = t("准备深诊…")
-                                scope.launch {
-                                    val report = withContext(Dispatchers.IO) {
-                                        runCatching {
-                                            JreSelfTest.runSeries(
-                                                ctx, inst.config.jreMajor, inst.config.mcVersion,
-                                            ) { msg -> seriesProg = msg }
-                                        }.getOrElse { t("深诊失败: %s", it.message) }
-                                    }
-                                    seriesProg = ""
-                                    seriesText = report
-                                }
-                            },
-                        ) { Text(t("深诊")) }
+                        // 诊断入口只留一个：崩溃摘要 + 最近日志；（自检 / 深诊）收进对话框内的次要操作
+                        OutlinedButton(onClick = { showDiag = true }) {
+                            Text(if (testing) t("自检中…") else t("诊断"))
+                        }
                         OutlinedButton(onClick = { showDigest = true }) { Text(t("错误摘要")) }
                     }
 
@@ -446,15 +429,58 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
             onDismissRequest = { showDiag = false },
             title = { Text(t("崩溃诊断")) },
             text = {
-                SelectionContainer {
-                    Text(
-                        body,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 10.sp,
-                        modifier = Modifier
-                            .heightIn(max = 440.dp)
-                            .verticalScroll(rememberScrollState()),
-                    )
+                Column {
+                    SelectionContainer {
+                        Text(
+                            body,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 10.sp,
+                            modifier = Modifier
+                                .heightIn(max = 340.dp)
+                                .verticalScroll(rememberScrollState()),
+                        )
+                    }
+                    Row(
+                        Modifier.fillMaxWidth().padding(top = 4.dp),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        TextButton(
+                            onClick = {
+                                showDiag = false
+                                testing = true
+                                scope.launch {
+                                    selfTestText = withContext(Dispatchers.IO) {
+                                        runCatching {
+                                            JreSelfTest.runAll(
+                                                ctx, inst.config.jreMajor,
+                                                inst.config.xmsMb, inst.config.xmxMb,
+                                                inst.config.mcVersion,
+                                            )
+                                        }.getOrElse { t("自检失败: %s", it.message) }
+                                    }
+                                    testing = false
+                                }
+                            },
+                        ) { Text(t("JRE 自检")) }
+                        TextButton(
+                            enabled = seriesProg.isEmpty(),
+                            onClick = {
+                                showDiag = false
+                                seriesProg = t("准备深诊…")
+                                scope.launch {
+                                    val report = withContext(Dispatchers.IO) {
+                                        runCatching {
+                                            JreSelfTest.runSeries(
+                                                ctx, inst.config.jreMajor, inst.config.mcVersion,
+                                            ) { msg -> seriesProg = msg }
+                                        }.getOrElse { t("深诊失败: %s", it.message) }
+                                    }
+                                    seriesProg = ""
+                                    seriesText = report
+                                }
+                            },
+                        ) { Text(t("深度探测")) }
+                    }
                 }
             },
             confirmButton = {

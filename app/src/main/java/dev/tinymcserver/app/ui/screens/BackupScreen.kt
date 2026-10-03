@@ -81,7 +81,7 @@ fun BackupScreen(vm: AppViewModel, nav: NavController, id: String) {
             TopAppBar(
                 title = { Text(t("备份")) },
                 navigationIcon = {
-                    IconButton(onClick = { nav.popBackStack() }) {
+                    IconButton(onClick = { if (nav.previousBackStackEntry != null) nav.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },

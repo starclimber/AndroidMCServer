@@ -63,7 +63,7 @@ fun PlayerManageScreen(vm: AppViewModel, nav: NavController, id: String) {
             TopAppBar(
                 title = { Text(t("玩家管理")) },
                 navigationIcon = {
-                    IconButton(onClick = { nav.popBackStack() }) {
+                    IconButton(onClick = { if (nav.previousBackStackEntry != null) nav.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },

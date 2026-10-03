@@ -78,6 +78,8 @@ fun CreateWizardScreen(vm: AppViewModel, nav: NavController, editId: String?) {
 
     var versions by remember { mutableStateOf<List<String>>(emptyList()) }
     var loadingVersions by remember { mutableStateOf(false) }
+    var versionError by remember { mutableStateOf<String?>(null) }
+    var versionReload by remember { mutableStateOf(0) }
     var showEula by remember { mutableStateOf(false) }
     var eulaAccepted by remember { mutableStateOf(editId != null && EulaManager.isAccepted(Paths.instanceDir(ctx, editId))) }
 
@@ -85,9 +87,13 @@ fun CreateWizardScreen(vm: AppViewModel, nav: NavController, editId: String?) {
     val jreSupported = VersionUtil.isSupported(mcVersion)
     val effectiveJre = (if (jreAutoOverride) jreManual else autoJre).takeIf { it > 0 } ?: 21
 
-    LaunchedEffect(type) {
+    // 版本列表加载：失败时记录原因供界面展示；「重试」会强制绕过缓存重新请求。
+    LaunchedEffect(type, versionReload) {
         loadingVersions = true
-        versions = runCatching { vm.loadVersions(type) }.getOrDefault(emptyList())
+        versionError = null
+        val res = runCatching { vm.loadVersions(type, force = versionReload > 0) }
+        versions = res.getOrDefault(emptyList())
+        versionError = res.exceptionOrNull()?.message
         loadingVersions = false
     }
 
@@ -96,7 +102,7 @@ fun CreateWizardScreen(vm: AppViewModel, nav: NavController, editId: String?) {
             TopAppBar(
                 title = { Text(if (editId == null) t("新建服务器") else t("编辑服务器")) },
                 navigationIcon = {
-                    IconButton(onClick = { nav.popBackStack() }) {
+                    IconButton(onClick = { if (nav.previousBackStackEntry != null) nav.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },
@@ -119,6 +125,17 @@ fun CreateWizardScreen(vm: AppViewModel, nav: NavController, editId: String?) {
                     mcVersion.ifBlank { t("点击选择") },
                     versions.take(200),
                 ) { mcVersion = it }
+                if (!loadingVersions && versions.isEmpty()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            (versionError ?: t("加载失败")) + " ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(onClick = { versionReload++ }) { Text(t("重试")) }
+                    }
+                }
                 DropField(
                     "JRE" + when {
                         !jreAutoOverride && autoJre > 0 -> t("（自动匹配：JRE %s）", autoJre)
@@ -263,7 +280,7 @@ fun CreateWizardScreen(vm: AppViewModel, nav: NavController, editId: String?) {
                         if (eulaAccepted) EulaManager.accept(Paths.instanceDir(ctx, existing.id))
                         vm.toast(t("已保存"))
                     }
-                    nav.popBackStack()
+                    if (nav.previousBackStackEntry != null) nav.popBackStack()
                 },
                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
             ) { Text(if (editId == null) t("创建并下载服务端") else t("保存")) }

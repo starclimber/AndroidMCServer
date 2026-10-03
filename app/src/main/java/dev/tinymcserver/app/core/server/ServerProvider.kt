@@ -27,12 +27,23 @@ object ServerProvider {
     @Volatile
     private var vanillaManifest: JsonObject? = null
 
-    fun listVersions(type: ServerType): List<String> = when (type) {
-        ServerType.VANILLA -> vanillaVersions()
-        ServerType.PAPER -> paperVersions("paper")
-        ServerType.FOLIA -> paperVersions("folia")
-        ServerType.PURPUR -> purpurVersions()
-    }.filter { VersionUtil.isStable(it) }
+    /**
+     * 版本列表。解析异常 / 空列表一律**抛异常**（而不是返回空列表），
+     * 这样界面能给出明确原因和「重试」入口，也不会把空结果缓存下来。
+     */
+    fun listVersions(type: ServerType): List<String> {
+        val raw = when (type) {
+            ServerType.VANILLA -> vanillaVersions()
+            ServerType.PAPER -> paperVersions("paper")
+            ServerType.FOLIA -> paperVersions("folia")
+            ServerType.PURPUR -> purpurVersions()
+        }
+        val stable = raw.filter { VersionUtil.isStable(it) }
+        if (stable.isEmpty()) {
+            throw RuntimeException(t("%s 没有可用版本，请稍后重试", type.display))
+        }
+        return stable
+    }
 
     fun serverJarUrl(type: ServerType, version: String): String = when (type) {
         ServerType.VANILLA -> vanillaJar(version)
@@ -71,10 +82,14 @@ object ServerProvider {
     // ---------------- Paper / Folia (fill v3) ----------------
     private fun paperVersions(project: String): List<String> {
         val root = json.parseToJsonElement(Http.get("$PAPER_API/projects/$project")).jsonObject
-        val versions = root["versions"]?.jsonObject ?: return emptyList()
+        val versions = root["versions"]?.jsonObject
+            ?: throw RuntimeException(t("接口返回异常（%s）：缺少 versions 字段", project))
         val out = ArrayList<String>()
         for ((_, v) in versions) {
-            v.jsonArray.forEach { out.add(it.jsonPrimitive.content) }
+            runCatching { v.jsonArray.forEach { out.add(it.jsonPrimitive.content) } }
+        }
+        if (out.isEmpty()) {
+            throw RuntimeException(t("%s 的版本列表为空，接口可能暂时不可用", project))
         }
         return out
     }
@@ -93,7 +108,11 @@ object ServerProvider {
     // ---------------- Purpur ----------------
     private fun purpurVersions(): List<String> {
         val root = json.parseToJsonElement("${Http.get("$PURPUR_API/purpur")}").jsonObject
-        val arr = root["versions"]?.jsonArray ?: return emptyList()
+        val arr = root["versions"]?.jsonArray
+            ?: throw RuntimeException(t("接口返回异常（%s）：缺少 versions 字段", "purpur"))
+        if (arr.isEmpty()) {
+            throw RuntimeException(t("%s 的版本列表为空，接口可能暂时不可用", "purpur"))
+        }
         return arr.map { it.jsonPrimitive.content }.reversed()
     }
 }

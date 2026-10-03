@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
@@ -105,7 +106,8 @@ fun InstanceListScreen(vm: AppViewModel, nav: NavController) {
                         inst = inst,
                         onOpen = { nav.navigate("console/${inst.id}") },
                         onEdit = { nav.navigate("wizard/${inst.id}") },
-                        onMore = { nav.navigate("files/${inst.id}") },
+                        onFiles = { nav.navigate("files/${inst.id}") },
+                        onConfig = { nav.navigate("config/${inst.id}") },
                         onDelete = { pendingDelete = inst },
                     )
                 }
@@ -136,7 +138,8 @@ private fun InstanceCard(
     inst: ServerInstance,
     onOpen: () -> Unit,
     onEdit: () -> Unit,
-    onMore: () -> Unit,
+    onFiles: () -> Unit,
+    onConfig: () -> Unit,
     onDelete: () -> Unit,
 ) {
     val controller = remember(inst.id) { ServerManager.controller(ctx, inst) }
@@ -178,9 +181,8 @@ private fun InstanceCard(
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                 IconButton(onClick = onOpen) { Icon(Icons.Filled.Terminal, t("控制台")) }
                 IconButton(onClick = onEdit) { Icon(Icons.Filled.Edit, t("编辑")) }
-                IconButton(onClick = onMore) {
-                    Icon(Icons.Filled.Settings, t("文件与更多"))
-                }
+                IconButton(onClick = onFiles) { Icon(Icons.Filled.Folder, t("文件")) }
+                IconButton(onClick = onConfig) { Icon(Icons.Filled.Settings, t("配置")) }
                 IconButton(onClick = onDelete) { Icon(Icons.Filled.Delete, t("删除")) }
             }
         }

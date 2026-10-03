@@ -67,7 +67,7 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController) {
             TopAppBar(
                 title = { Text(t("设置")) },
                 navigationIcon = {
-                    IconButton(onClick = { nav.popBackStack() }) {
+                    IconButton(onClick = { if (nav.previousBackStackEntry != null) nav.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },

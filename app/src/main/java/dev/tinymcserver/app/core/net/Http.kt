@@ -17,12 +17,44 @@ object Http {
         .retryOnConnectionFailure(true)
         .build()
 
-    private const val UA = "TinyMCServer/1.0 (Android)"
+    /** PaperMC 等平台要求 API 客户端提供可识别的 User-Agent。 */
+    private const val UA = "TinyMCServer/1.1 (+https://github.com/starclimber/TinyMCServer)"
 
-    fun get(url: String): String {
+    /** HTTP 状态码异常；[retriable] = true 表示值得重试（429 / 5xx）。 */
+    class HttpException(val code: Int, val retriable: Boolean, message: String) :
+        RuntimeException(message)
+
+    /**
+     * GET 文本，失败时**自动重试**。
+     *
+     * 会重试：连接 / DNS / 超时等网络异常，以及 429、5xx（服务端暂时性错误）。
+     * 不重试：其余 4xx —— 请求本身有问题，重试没意义。
+     * 退避：300ms → 600ms → 1200ms …
+     *
+     * @param attempts 总尝试次数（默认 3：首次 + 最多 2 次重试）
+     */
+    fun get(url: String, attempts: Int = 3): String {
+        var last: Throwable? = null
+        for (i in 1..attempts) {
+            try {
+                return getOnce(url)
+            } catch (e: Throwable) {
+                if (e is CancellationException) throw e
+                last = e
+                if (e is HttpException && !e.retriable) throw e
+                if (i < attempts) runCatching { Thread.sleep(300L shl (i - 1)) }
+            }
+        }
+        throw last ?: RuntimeException("GET failed: $url")
+    }
+
+    private fun getOnce(url: String): String {
         val req = Request.Builder().url(url).header("User-Agent", UA).build()
         client.newCall(req).execute().use { r ->
-            if (!r.isSuccessful) throw RuntimeException("HTTP ${r.code} @ $url")
+            if (!r.isSuccessful) {
+                val retriable = r.code == 429 || r.code in 500..599
+                throw HttpException(r.code, retriable, "HTTP ${r.code} @ $url")
+            }
             return r.body?.string() ?: ""
         }
     }

@@ -1,5 +1,8 @@
 package dev.tinymcserver.app.ui.screens
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -20,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import dev.tinymcserver.app.core.runtime.JreManager
@@ -53,7 +57,7 @@ fun AboutScreen(nav: NavController) {
             TopAppBar(
                 title = { Text(t("关于")) },
                 navigationIcon = {
-                    IconButton(onClick = { nav.popBackStack() }) {
+                    IconButton(onClick = { if (nav.previousBackStackEntry != null) nav.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },
@@ -68,6 +72,12 @@ fun AboutScreen(nav: NavController) {
                 t("纯手机 Minecraft 服务端启动器 · v%s（%s）", versionName, versionCode),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Section(t("项目主页"))
+            LinkRow(
+                text = "github.com/starclimber/TinyMCServer",
+                url = "https://github.com/starclimber/TinyMCServer",
             )
 
             Section(t("它能做什么"))
@@ -121,5 +131,26 @@ private fun Bullet(text: String) {
         "• $text",
         style = MaterialTheme.typography.bodySmall,
         modifier = Modifier.padding(vertical = 1.dp),
+    )
+}
+
+@Composable
+private fun LinkRow(text: String, url: String) {
+    val ctx = LocalContext.current
+    Text(
+        text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.primary,
+        textDecoration = TextDecoration.Underline,
+        modifier = Modifier
+            .padding(vertical = 3.dp)
+            .clickable {
+                runCatching {
+                    ctx.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                }
+            },
     )
 }

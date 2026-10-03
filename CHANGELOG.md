@@ -5,6 +5,52 @@
 
 ---
 
+## [1.2.0] — 2026-10-03
+
+### 界面 / Interface
+
+- 状态栏改为**透明**并让内容延伸其后（edge-to-edge）；挖孔屏下标题不再被摄像头遮挡。
+  The status bar is now **transparent** with content extending behind it (edge-to-edge); titles are no longer hidden by a punch-hole camera.
+- 底部**手势导航条（小横条）**区域不再是一条黑带，内容自动避让。
+  The bottom **gesture bar** area is no longer a black strip; content avoids it automatically.
+- 关闭系统栏的自动对比度底衬。
+  Disabled the system's automatic system-bar contrast scrim.
+
+### 页面结构 / Page structure
+
+- 「文件」与「配置」拆分为**两个独立页面**，实例卡片与控制台底部各有入口（原先是同一页面的多个 Tab）。
+  Split **Files** and **Config** into two separate pages, reachable from both the instance card and the console toolbar (previously tabs of one page).
+- 「插件」页整合为 **4 个 Tab**：本地导入 / 链接下载 / 在线搜索 / 已安装。
+  Consolidated **Plugins** into **4 tabs**: local import / download from link / online search / installed.
+- 诊断相关入口精简为 **「诊断」+「错误摘要」**（JRE 自检与深度探测收进诊断对话框）。
+  Reduced diagnostics to **Diagnose + Error summary** (JRE self-test and deep probe moved inside the diagnose dialog).
+
+### 新增 / Added
+
+- **导入插件**：从手机选择 `.jar`，或粘贴直链下载到 `plugins/`；可查看并删除已安装插件。
+  **Import plugins**: pick a local `.jar`, or download from a direct link into `plugins/`; browse and delete installed plugins.
+- 关于页新增项目仓库链接。
+  Added a repository link on the About screen.
+
+### 修复 / Fixed
+
+- **下载服务端时的版本列表**（Paper / Folia）偶发空白：HTTP 自动重试（网络异常 / 429 / 5xx），失败时显示原因与重试按钮，空结果不再被缓存。
+  The **version list shown when downloading a server** (Paper / Folia) sometimes came up empty: HTTP requests now auto-retry (network errors / 429 / 5xx), failures show a reason plus a Retry button, and empty results are no longer cached.
+- **Android 14+ 灭屏后 WiFi 锁失效**导致服务端掉线（`WIFI_MODE_FULL_HIGH_PERF` 被系统自动替换为仅亮屏生效的 `WIFI_MODE_FULL_LOW_LATENCY`），改用 `WIFI_MODE_FULL`。
+  **Wi-Fi lock stopped working with the screen off on Android 14+** (`WIFI_MODE_FULL_HIGH_PERF` is auto-replaced by `WIFI_MODE_FULL_LOW_LATENCY`, which only holds while the screen is on), now uses `WIFI_MODE_FULL`.
+- 规避 Android 15+ 对前台服务的运行时长限制。
+  Avoided Android 15+ foreground-service runtime limits.
+- 退出控制台后偶发白屏。
+  Occasional blank screen right after leaving the console.
+- 英文界面下 `server.properties` 键名括号内重复英文。
+  English UI no longer repeats the raw key in parentheses.
+
+### 变更 / Changed
+
+- 版本号 `1.1.0` → `1.2.0`（versionCode 3）。
+
+---
+
 ## [1.1.0] — 2026-09-30
 
 ### 新增 / Added

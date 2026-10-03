@@ -120,7 +120,7 @@ fun SkinForgeScreen(nav: NavController) {
             TopAppBar(
                 title = { Text(t("皮肤工坊")) },
                 navigationIcon = {
-                    IconButton(onClick = { nav.popBackStack() }) {
+                    IconButton(onClick = { if (nav.previousBackStackEntry != null) nav.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = t("返回"))
                     }
                 },

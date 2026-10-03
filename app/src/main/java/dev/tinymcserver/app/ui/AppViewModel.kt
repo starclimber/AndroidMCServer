@@ -76,10 +76,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         return inst
     }
 
-    suspend fun loadVersions(type: ServerType): List<String> {
-        versionCache[type.key]?.let { return it }
+    /**
+     * 拉取版本列表。
+     *
+     * 注意：**只缓存非空结果** —— 旧实现会把一次失败 / 空响应缓存下来，
+     * 导致「列表空白」在本次进程内一直无法恢复。
+     *
+     * @param force 忽略缓存重新请求（界面上的「重试」用它）
+     */
+    suspend fun loadVersions(type: ServerType, force: Boolean = false): List<String> {
+        if (!force) versionCache[type.key]?.takeIf { it.isNotEmpty() }?.let { return it }
         val list = withContext(Dispatchers.IO) { ServerProvider.listVersions(type) }
-        versionCache[type.key] = list
+        if (list.isNotEmpty()) versionCache[type.key] = list
         return list
     }
 
