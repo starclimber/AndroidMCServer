@@ -31,6 +31,11 @@ object Settings {
         get() = ctxHolder?.let { sp(it).getBoolean("hide_from_recents", false) } ?: false
         set(v) { ctxHolder?.let { sp(it).edit().putBoolean("hide_from_recents", v).apply() } }
 
+    // 分享 / 复制日志时自动脱敏（默认开）：抹掉玩家 IP、UUID 中段与玩家名
+    var sanitizeSharedLogs: Boolean
+        get() = ctxHolder?.let { sp(it).getBoolean("sanitize_shared_logs", true) } ?: true
+        set(v) { ctxHolder?.let { sp(it).edit().putBoolean("sanitize_shared_logs", v).apply() } }
+
     private var ctxHolder: Context? = null
     fun attach(ctx: Context) { ctxHolder = ctx.applicationContext }
 }

@@ -5,6 +5,25 @@
 
 ---
 
+## [1.2.1] — 2026-10-03
+
+### 新增 / Added
+
+- **日志分享脱敏**（设置 → 通用，**默认开启**）：复制日志（诊断 / 错误摘要 / JRE 自检 / 深度探测）时自动处理隐私信息 ——
+  玩家 **IP** → `x.x.x.x`；**UUID** 只保留前 8 位与后 4 位，中段以 `*` 覆盖；**玩家名** → `Player1` / `Player2`…（`/op`、`/ban` 等命令里的名字一并处理）。
+  复制出来的内容可以直接贴进公开的 issue，不必手动删。可在设置中关闭。
+  **Log-sharing sanitization** (Settings → General, **on by default**): when copying a log (diagnose / error summary / JRE self-test / deep probe), sensitive data is handled automatically —
+  player **IPs** → `x.x.x.x`; **UUIDs** keep only the first 8 and last 4 characters with the middle masked by `*`; **player names** → `Player1` / `Player2`… (names inside `/op`, `/ban`, etc. are handled too).
+  Whatever you copy can be pasted straight into a public issue — no manual redaction. It can be turned off in Settings.
+
+### 变更 / Changed
+
+- 版本号 `1.2.0` → `1.2.1`（versionCode 4）。
+- 更新日志的「修复」条目改为以**症状**描述（例如「灭屏后掉线（Android 14+）」而不是「WiFi 锁失效」），方便按现象检索。
+  Changelog "Fixed" entries are now phrased as **symptoms** (e.g. "drops off after screen-off (Android 14+)" instead of "Wi-Fi lock broken"), matching how people search.
+
+---
+
 ## [1.2.0] — 2026-10-03
 
 ### 界面 / Interface
@@ -34,16 +53,18 @@
 
 ### 修复 / Fixed
 
-- **下载服务端时的版本列表**（Paper / Folia）偶发空白：HTTP 自动重试（网络异常 / 429 / 5xx），失败时显示原因与重试按钮，空结果不再被缓存。
-  The **version list shown when downloading a server** (Paper / Folia) sometimes came up empty: HTTP requests now auto-retry (network errors / 429 / 5xx), failures show a reason plus a Retry button, and empty results are no longer cached.
-- **Android 14+ 灭屏后 WiFi 锁失效**导致服务端掉线（`WIFI_MODE_FULL_HIGH_PERF` 被系统自动替换为仅亮屏生效的 `WIFI_MODE_FULL_LOW_LATENCY`），改用 `WIFI_MODE_FULL`。
-  **Wi-Fi lock stopped working with the screen off on Android 14+** (`WIFI_MODE_FULL_HIGH_PERF` is auto-replaced by `WIFI_MODE_FULL_LOW_LATENCY`, which only holds while the screen is on), now uses `WIFI_MODE_FULL`.
-- 规避 Android 15+ 对前台服务的运行时长限制。
-  Avoided Android 15+ foreground-service runtime limits.
-- 退出控制台后偶发白屏。
-  Occasional blank screen right after leaving the console.
-- 英文界面下 `server.properties` 键名括号内重复英文。
-  English UI no longer repeats the raw key in parentheses.
+> 条目按**用户看到的症状**撰写，便于按现象搜索，也方便直接对照 issue 模板里的「复现步骤」。
+
+- **手机灭屏几分钟后，服务器掉线 —— 同一局域网也连不上**（Android 14 及以上）。
+  **A few minutes after the phone's screen turns off, the server drops off — unreachable even on the same LAN** (Android 14+).
+- **放在后台跑约 6 小时后，服务器被系统停掉**（Android 15 及以上）。
+  **After roughly 6 hours in the background, the server is stopped by the system** (Android 15+).
+- **从控制台返回后偶发白屏**。
+  **Occasional blank screen right after returning from the console.**
+- **「下载服务端」的版本列表偶发空白**（Paper / Folia）：现已自动重试，失败会说明原因并可再试。
+  **The version list under "Download server" sometimes came up empty** (Paper / Folia): it now retries automatically, and on failure shows the reason with a Retry button.
+- **英文界面下 `server.properties` 标签的括号里又重复了一遍英文**。
+  **In the English UI the raw key was repeated inside the parentheses of `server.properties` labels.**
 
 ### 变更 / Changed
 

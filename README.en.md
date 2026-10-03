@@ -19,8 +19,7 @@ It bundles a trimmed OpenJDK runtime so the device can create and run Vanilla, P
 - **Background reliability**: foreground service + WakeLock + WifiLock + battery-optimization whitelist guidance.
 - **Multilingual**: the UI and `server.properties` labels support Chinese / English / Français / Español / Русский; auto-detected on first launch and switchable in Settings.
 - **Hide from recents**: an opt-in setting (off by default) that removes the app from the system recents list.
-- **Multilingual**: the UI and `server.properties` labels support Chinese / English / Français / Español / Русский; auto-detected on first launch and switchable in Settings.
-- **Hide from recents**: an opt-in setting (off by default) that removes the app from the system recents list.
+- **Log-sharing sanitization** (on by default): copying a log automatically hides player IPs, the middle of UUIDs and player names, so it is safe to ask for help in public.
 
 ## Requirements
 

@@ -59,6 +59,7 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController) {
     var mirror by remember { mutableStateOf(Settings.mirrorBase) }
     var ignoringBattery by remember { mutableStateOf(BatteryUtil.isIgnoring(ctx)) }
     var hideRecents by remember { mutableStateOf(Settings.hideFromRecents) }
+    var sanitizeLogs by remember { mutableStateOf(Settings.sanitizeSharedLogs) }
 
     LaunchedEffect(refreshFlag) { ignoringBattery = BatteryUtil.isIgnoring(ctx) }
 
@@ -115,6 +116,29 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController) {
                             hideRecents = v
                             Settings.hideFromRecents = v
                             (ctx as? MainActivity)?.applyRecentsVisibility()
+                        },
+                    )
+                }
+
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(t("日志分享脱敏"), style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            t("复制或分享日志时，自动隐藏玩家 IP、UUID 中段与玩家名，方便公开求助。"),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(
+                        checked = sanitizeLogs,
+                        onCheckedChange = { v ->
+                            sanitizeLogs = v
+                            Settings.sanitizeSharedLogs = v
                         },
                     )
                 }

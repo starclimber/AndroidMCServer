@@ -72,6 +72,8 @@ import dev.tinymcserver.app.core.net.NetUtil
 import dev.tinymcserver.app.core.runtime.JreSelfTest
 import dev.tinymcserver.app.core.server.LaunchArgs
 import dev.tinymcserver.app.core.server.LogParser
+import dev.tinymcserver.app.core.server.LogSanitizer
+import dev.tinymcserver.app.core.storage.Settings
 import dev.tinymcserver.app.core.server.ServerManager
 import dev.tinymcserver.app.core.service.ServerService
 import dev.tinymcserver.app.core.storage.Paths
@@ -106,6 +108,11 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
     val log by controller.log.collectAsState()
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboardManager.current
+
+    // 复制日志前按设置脱敏（默认开启）：隐藏玩家 IP / UUID 中段 / 玩家名
+    val secureText: (String) -> String = { raw ->
+        if (Settings.sanitizeSharedLogs) LogSanitizer.sanitize(raw) else raw
+    }
     var input by remember { mutableStateOf("") }
     var showDigest by remember { mutableStateOf(false) }
     var showDiag by remember { mutableStateOf(false) }
@@ -378,8 +385,11 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
             },
             confirmButton = {
                 TextButton(onClick = {
-                    clipboard.setText(AnnotatedString(text))
-                    vm.toast(t("已复制自检结果"))
+                    clipboard.setText(AnnotatedString(secureText(text)))
+                    vm.toast(
+                        if (Settings.sanitizeSharedLogs) t("已复制自检结果（已脱敏）")
+                        else t("已复制自检结果")
+                    )
                 }) { Text(t("复制")) }
             },
             dismissButton = { TextButton(onClick = { selfTestText = null }) { Text(t("关闭")) } },
@@ -404,8 +414,11 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
             },
             confirmButton = {
                 TextButton(onClick = {
-                    clipboard.setText(AnnotatedString(text))
-                    vm.toast(t("已复制深诊结果"))
+                    clipboard.setText(AnnotatedString(secureText(text)))
+                    vm.toast(
+                        if (Settings.sanitizeSharedLogs) t("已复制深诊结果（已脱敏）")
+                        else t("已复制深诊结果")
+                    )
                 }) { Text(t("复制全部")) }
             },
             dismissButton = { TextButton(onClick = { seriesText = null }) { Text(t("关闭")) } },
@@ -485,8 +498,11 @@ fun ConsoleScreen(vm: AppViewModel, nav: NavController, id: String) {
             },
             confirmButton = {
                 TextButton(onClick = {
-                    clipboard.setText(AnnotatedString(body))
-                    vm.toast(t("已复制诊断信息"))
+                    clipboard.setText(AnnotatedString(secureText(body)))
+                    vm.toast(
+                        if (Settings.sanitizeSharedLogs) t("已复制诊断信息（已脱敏）")
+                        else t("已复制诊断信息")
+                    )
                 }) { Text(t("复制全部")) }
             },
             dismissButton = { TextButton(onClick = { showDiag = false }) { Text(t("关闭")) } },
